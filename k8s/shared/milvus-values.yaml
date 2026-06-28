@@ -1,0 +1,38 @@
+# اجرای میلواس در حالت Standalone (مناسب برای محیط توسعه و لوکال)
+cluster:
+  enabled: false 
+
+# تنظیمات منابع کانتینر اصلی میلواس برای جلوگیری از کرش کردن در kind
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "250m"
+  limits:
+    memory: "2Gi"
+    cpu: "1"
+
+# تنظیمات MinIO (سرویس ذخیره‌سازی اشیاء که میلواس به آن نیاز دارد)
+minio:
+  mode: standalone
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+  persistence:
+    enabled: false # در محیط لوکال دیتا روی دیسک ماندگار نمی‌شود تا سریع‌تر باشد
+
+# تنظیمات etcd (دیتابیس متادیتا که میلواس به آن نیاز دارد)
+etcd:
+  replicaCount: 1
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+  persistence:
+    enabled: false
+
+# غیرفعال کردن سیستم‌های پیام‌رسان سنگین که در حالت لوکال نیاز نیستند
+pulsar:
+  enabled: false
+kafka:
+  enabled: false
