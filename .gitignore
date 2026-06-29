@@ -2,10 +2,22 @@
 # Node.js
 ###############################################################################
 
-**/node_modules/
-**/.npm/
-**/.pnpm-store/
-**/.yarn/
+node_modules/
+*/node_modules/
+**/node_modules/**
+
+.npm/
+*/.npm/
+**/.npm/**
+
+.pnpm-store/
+*/.pnpm-store/
+**/.pnpm-store/**
+
+.yarn/
+*/.yarn/
+**/.yarn/**
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -15,17 +27,18 @@ pnpm-debug.log*
 # Python
 ###############################################################################
 
-**/.venv/
-**/venv/
-**/env/
-**/__pycache__/
-**/*.py[cod]
-**/.pytest_cache/
-**/.mypy_cache/
-**/.ruff_cache/
-**/.coverage
-**/htmlcov/
+# Python virtualenvs
+venv/
+.venv/
+env/
 
+# Nested virtualenvs
+*/venv/
+*/.venv/
+*/env/
+**/venv/**
+**/.venv/**
+**/env/**
 ###############################################################################
 # Environment
 ###############################################################################
