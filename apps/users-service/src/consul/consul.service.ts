@@ -2,6 +2,9 @@ import { Injectable, OnApplicationShutdown, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as consul from 'consul';
 
+// ✅ استفاده از نوع‌های داخلی Consul
+type ServiceEntry = consul.AgentService;
+
 @Injectable()
 export class ConsulService implements OnApplicationShutdown {
   private readonly logger = new Logger(ConsulService.name);
@@ -40,7 +43,7 @@ export class ConsulService implements OnApplicationShutdown {
       await this.client.agent.service.register({
         name: serviceName,
         id: this.serviceId,
-        address: 'mrun-users', // نام سرویس در Docker
+        address: 'mrun-users',
         port: servicePort,
         tags: ['nestjs', 'users', `v${serviceVersion}`],
         check: {
@@ -56,16 +59,22 @@ export class ConsulService implements OnApplicationShutdown {
     }
   }
 
-  async getService(name: string): Promise<any> {
+  // ✅ استفاده از نوع‌های داخلی
+  async getService(name: string): Promise<ServiceEntry | null> {
     if (!this.client) return null;
 
     try {
       const services = await this.client.agent.services();
+      
+      // ✅ استفاده از Object.entries برای دسترسی به کلید و مقدار
       for (const [id, service] of Object.entries(services)) {
         if (service.Service === name) {
+          this.logger.log(`✅ Found service '${name}' with ID: ${id}`);
           return service;
         }
       }
+      
+      this.logger.warn(`⚠️ Service '${name}' not found in Consul`);
       return null;
     } catch (error) {
       this.logger.error(`❌ Failed to get service: ${error.message}`);
@@ -73,7 +82,31 @@ export class ConsulService implements OnApplicationShutdown {
     }
   }
 
-  async getAllServices(): Promise<any> {
+  // ✅ تابع جدید برای دریافت سرویس با Round-Robin
+  async getServiceRoundRobin(name: string): Promise<ServiceEntry | null> {
+    if (!this.client) return null;
+
+    try {
+      const services = await this.client.agent.services();
+      const serviceList = Object.values(services).filter(
+        (svc) => svc.Service === name
+      );
+
+      if (serviceList.length === 0) {
+        this.logger.warn(`⚠️ No service found for '${name}'`);
+        return null;
+      }
+
+      // ✅ انتخاب تصادفی بین سرویس‌های موجود
+      const randomIndex = Math.floor(Math.random() * serviceList.length);
+      return serviceList[randomIndex];
+    } catch (error) {
+      this.logger.error(`❌ Failed to get service: ${error.message}`);
+      return null;
+    }
+  }
+
+  async getAllServices(): Promise<Record<string, ServiceEntry>> {
     if (!this.client) return {};
 
     try {

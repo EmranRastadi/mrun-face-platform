@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+
+metadata:
+  name: cards-service-pdb
+
+spec:
+  minAvailable: 1
+
+  selector:
+    matchLabels:
+      app: cards-service

@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+
+metadata:
+  name: cards-service
+
+spec:
+  podSelector:
+    matchLabels:
+      app: cards-service
+
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    - from:
+        - podSelector: {}
+
+  egress:
+    - {}

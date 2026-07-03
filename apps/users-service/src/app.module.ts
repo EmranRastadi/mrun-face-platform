@@ -1,42 +1,37 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { UsersModule } from './users/users.module';
-import { ConsulModule } from './consul/consul.module';
 import configuration from './config/configuration';
-
+import { getDatabaseConfig } from './config/database.config';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 @Module({
   imports: [
-    // Config
+    // ✅ بارگذاری Config با پشتیبانی از .env
     ConfigModule.forRoot({
       load: [configuration],
       isGlobal: true,
+      envFilePath: [
+        '.env.local',    // محلی (اولویت بالاتر)
+        '.env',          // پیش‌فرض
+      ],
+      expandVariables: true, // ✅ پشتیبانی از ${VAR} در env
     }),
-
-    // Database
+    
+    // ✅ استفاده از Config برای Database
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get('database.host'),
-        port: configService.get('database.port'),
-        username: configService.get('database.username'),
-        password: configService.get('database.password'),
-        database: configService.get('database.name'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: configService.get('environment') === 'development',
-        logging: configService.get('environment') === 'development',
-      }),
       inject: [ConfigService],
+      useFactory: getDatabaseConfig,
     }),
-
-    // Modules
-    UsersModule,
-    ConsulModule,
+    
+    // سایر ماژول‌ها...
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  providers: [
+        {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor, // ✅ اینجا ConfigService تزریق می‌شود
+    },
+  ]
 })
 export class AppModule {}

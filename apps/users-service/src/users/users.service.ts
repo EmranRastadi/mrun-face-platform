@@ -9,15 +9,23 @@ import * as bcrypt from 'bcrypt';
 import { User } from './users.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-  ) {}
+    // private configService: ConfigService 
+  ) {
+    // const dbHost = this.configService.get('database.host');
+    // const dbPort = this.configService.get('database.port');
+    // const jwtSecret = this.configService.get('security.jwtSecret');
+    //     console.log(`✅ Connected to DB at ${dbHost}:${dbPort}`);
+  }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
+    
     // بررسی تکراری نبودن
     const existingUser = await this.usersRepository.findOne({
       where: [{ username: createUserDto.username }, { email: createUserDto.email }],

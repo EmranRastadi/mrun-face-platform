@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+// import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { ConsulService } from './consul/consul.service';
 import { ConfigService } from '@nestjs/config';
 import * as winston from 'winston';
@@ -34,7 +34,7 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   // Global Interceptors
-  app.useGlobalInterceptors(new LoggingInterceptor());
+  // app.useGlobalInterceptors(new LoggingInterceptor());
 
   // CORS
   app.enableCors();
