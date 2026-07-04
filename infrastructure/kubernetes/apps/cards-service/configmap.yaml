@@ -1,27 +1,61 @@
 apiVersion: v1
 kind: ConfigMap
+
 metadata:
   name: cards-service-config
+  namespace: mrun-apps
 
 data:
-  NODE_ENV: production
 
-  PORT: "3000"
+  APP_NAME: cards-service
+  APP_ENV: production
+  LOG_LEVEL: info
 
-  DATABASE_HOST: postgres
+  HOST: "0.0.0.0"
+  PORT: "8000"
 
-  DATABASE_PORT: "5432"
+  ####################################
+  # PostgreSQL
+  ####################################
 
-  DATABASE_NAME: cards_db
+  POSTGRES_HOST: postgres.mrun-system.svc.cluster.local
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: cards_db
 
-  DATABASE_USER: postgres
+  ####################################
+  # DragonFlyDB
+  ####################################
 
-  KAFKA_BROKERS: kafka:9092
+  CACHE_HOST: dragonfly.mrun-system.svc.cluster.local
+  CACHE_PORT: "6379"
 
-  CONSUL_HOST: consul
+  ####################################
+  # MinIO
+  ####################################
 
+  MINIO_ENDPOINT: minio.mrun-system.svc.cluster.local:9000
+  MINIO_BUCKET: cards-images
+  MINIO_SECURE: "false"
+
+  ####################################
+  # Kafka
+  ####################################
+
+  KAFKA_BROKERS: kafka.mrun-system.svc.cluster.local:9092
+
+  CARD_EVENTS_TOPIC: card.events
+
+  ####################################
+  # Consul
+  ####################################
+
+  CONSUL_HOST: consul.mrun-system.svc.cluster.local
   CONSUL_PORT: "8500"
 
-  KEYCLOAK_URL: http://keycloak:8080
+  ####################################
+  # Internal Services
+  ####################################
 
-  LOG_LEVEL: info
+  CAMERA_SERVICE_URL: http://camera-service.mrun-apps.svc.cluster.local:8000
+
+  SIMILARITY_SERVICE_URL: http://similarity-service.mrun-apps.svc.cluster.local:8000

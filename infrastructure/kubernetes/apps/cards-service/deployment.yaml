@@ -1,62 +1,84 @@
-apiVersion: apps.yaml/v1
+apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: cards-service
-  labels:
-    app: cards-service
+  namespace: mrun-apps
+
 spec:
   replicas: 2
+
+  strategy:
+    type: RollingUpdate
 
   selector:
     matchLabels:
       app: cards-service
 
   template:
+
     metadata:
       labels:
         app: cards-service
 
     spec:
+
       serviceAccountName: cards-service
 
+      securityContext:
+        fsGroup: 1000
+
       containers:
+
         - name: cards-service
+
           image: mrun/cards-service:latest
+
           imagePullPolicy: IfNotPresent
 
           ports:
+
             - containerPort: 3000
 
           envFrom:
+
             - configMapRef:
                 name: cards-service-config
 
-          env:
-            - name: DATABASE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: cards-service-secret
-                  key: DATABASE_PASSWORD
-
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 3000
-            initialDelaySeconds: 5
-            periodSeconds: 10
-
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 3000
-            initialDelaySeconds: 15
-            periodSeconds: 20
+            - secretRef:
+                name: cards-service-secret
 
           resources:
+
             requests:
               cpu: 100m
-              memory: 256Mi
+              memory: 128Mi
 
             limits:
               cpu: 500m
               memory: 512Mi
+
+          startupProbe:
+
+            httpGet:
+              path: /health
+              port: 3000
+
+            periodSeconds: 5
+            failureThreshold: 30
+
+          readinessProbe:
+
+            httpGet:
+              path: /health
+              port: 3000
+
+            periodSeconds: 5
+
+          livenessProbe:
+
+            httpGet:
+              path: /health
+              port: 3000
+
+            periodSeconds: 10

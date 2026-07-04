@@ -2,23 +2,30 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 
 metadata:
-  name: users-service
+  name: api-gateway
 
 spec:
+
   scaleTargetRef:
-    apiVersion: apps.yaml/v1
+
+    apiVersion: apps/v1
     kind: Deployment
-    name: users-service
+    name: api-gateway
 
   minReplicas: 2
+
   maxReplicas: 10
 
   metrics:
+
     - type: Resource
 
       resource:
+
         name: cpu
 
         target:
+
           type: Utilization
+
           averageUtilization: 70

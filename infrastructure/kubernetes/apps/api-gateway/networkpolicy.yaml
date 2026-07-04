@@ -2,20 +2,27 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 
 metadata:
-  name: users-service
+  name: api-gateway
 
 spec:
+
   podSelector:
+
     matchLabels:
-      app: users-service
+      app: api-gateway
 
   policyTypes:
     - Ingress
     - Egress
 
   ingress:
+
     - from:
-        - podSelector: {}
+
+        - namespaceSelector: {}
 
   egress:
-    - {}
+
+    - to:
+
+        - namespaceSelector: {}

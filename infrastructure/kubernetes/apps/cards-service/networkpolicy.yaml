@@ -5,7 +5,9 @@ metadata:
   name: cards-service
 
 spec:
+
   podSelector:
+
     matchLabels:
       app: cards-service
 
@@ -14,8 +16,13 @@ spec:
     - Egress
 
   ingress:
+
     - from:
-        - podSelector: {}
+
+        - namespaceSelector: {}
 
   egress:
-    - {}
+
+    - to:
+
+        - namespaceSelector: {}

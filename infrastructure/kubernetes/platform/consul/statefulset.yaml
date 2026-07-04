@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: StatefulSet
+
+metadata:
+  name: consul
+  namespace: mrun-system
+  labels:
+    app: consul
+
+spec:
+  serviceName: consul
+
+  replicas: 1
+
+  podManagementPolicy: OrderedReady
+
+  updateStrategy:
+    type: RollingUpdate
+
+  selector:
+    matchLabels:
+      app: consul
+
+  template:
+    metadata:
+      labels:
+        app: consul
+
+    spec:
+      terminationGracePeriodSeconds: 30
+
+      securityContext:
+        fsGroup: 1000
+
+      containers:
+        - name: consul
+
+          image: hashicorp/consul:1.21
+
+          imagePullPolicy: IfNotPresent
+
+          args:
+            - "agent"
+            - "-config-file=/consul/config/consul.hcl"
+
+          ports:
+            - name: http
+              containerPort: 8500
+
+            - name: dns
+              containerPort: 8600
+              protocol: UDP
+
+            - name: rpc
+              containerPort: 8300
+
+            - name: serf-lan
+              containerPort: 8301
+
+            - name: serf-wan
+              containerPort: 8302
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          livenessProbe:
+            httpGet:
+              path: /v1/status/leader
+              port: 8500
+
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            timeoutSeconds: 5
+
+          readinessProbe:
+            httpGet:
+              path: /v1/status/leader
+              port: 8500
+
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+
+          volumeMounts:
+            - name: consul-config
+              mountPath: /consul/config/consul.hcl
+              subPath: consul.hcl
+
+      volumes:
+        - name: consul-config
+
+          configMap:
+            name: consul-config
+
+  volumeClaimTemplates:
+    - metadata:
+        name: consul-data
+
+      spec:
+        accessModes:
+          - ReadWriteOnce
+
+        storageClassName: standard
+
+        resources:
+          requests:
+            storage: 2Gi

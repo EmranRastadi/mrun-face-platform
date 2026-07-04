@@ -5,11 +5,16 @@ metadata:
   name: cards-service
 
 spec:
+
   selector:
+
     matchLabels:
       app: cards-service
 
   endpoints:
+
     - port: http
+
       path: /metrics
-      interval: 15s
+
+      interval: 30s

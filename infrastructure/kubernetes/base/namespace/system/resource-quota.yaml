@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ResourceQuota
 
 metadata:
-  name: mrun-resource-quota
+  name: system-resource-quota
   namespace: mrun-system
 
 spec:

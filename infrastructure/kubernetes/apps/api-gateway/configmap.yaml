@@ -1,27 +1,23 @@
 apiVersion: v1
 kind: ConfigMap
+
 metadata:
-  name: users-service-config
+  name: api-gateway-config
+  namespace: mrun-apps
 
 data:
   NODE_ENV: production
 
   PORT: "3000"
 
-  DATABASE_HOST: postgres
+  LOG_LEVEL: info
 
-  DATABASE_PORT: "5432"
-
-  DATABASE_NAME: users_db
-
-  DATABASE_USER: postgres
-
-  KAFKA_BROKERS: kafka:9092
-
-  CONSUL_HOST: consul
+  CONSUL_HOST: consul.mrun-system.svc.cluster.local
 
   CONSUL_PORT: "8500"
 
-  KEYCLOAK_URL: http://keycloak:8080
+  KAFKA_BROKERS: kafka.mrun-system.svc.cluster.local:9092
 
-  LOG_LEVEL: info
+  KEYCLOAK_URL: http://keycloak.mrun-security.svc.cluster.local:8080
+
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo.mrun-monitoring.svc.cluster.local:4318

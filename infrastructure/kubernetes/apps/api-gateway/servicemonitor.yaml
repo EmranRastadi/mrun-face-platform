@@ -2,14 +2,19 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 
 metadata:
-  name: users-service
+  name: api-gateway
 
 spec:
+
   selector:
+
     matchLabels:
-      app: users-service
+      app: api-gateway
 
   endpoints:
+
     - port: http
+
       path: /metrics
-      interval: 15s
+
+      interval: 30s
