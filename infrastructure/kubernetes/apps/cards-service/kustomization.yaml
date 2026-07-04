@@ -10,10 +10,4 @@ resources:
   - hpa.yaml
   - networkpolicy.yaml
   - pdb.yaml
-  - podmonitor.yaml
 #  - servicemonitor.yaml
-
-commonLabels:
-  app.kubernetes.io/name: users-service
-  app.kubernetes.io/component: backend
-  app.kubernetes.io/part-of: mrun-platform

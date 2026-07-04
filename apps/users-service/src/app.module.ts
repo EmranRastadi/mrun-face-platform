@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import {forwardRef, Module} from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import configuration from './config/configuration';
@@ -17,7 +17,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
       ],
       expandVariables: true, // ✅ پشتیبانی از ${VAR} در env
     }),
-    
+    forwardRef(() => ConsulModule),
     // ✅ استفاده از Config برای Database
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
