@@ -91,6 +91,10 @@ spec:
             - name: consul-config
               mountPath: /consul/config/consul.hcl
               subPath: consul.hcl
+              readOnly: true
+
+            - name: consul-data
+              mountPath: /consul/data
 
       volumes:
         - name: consul-config
