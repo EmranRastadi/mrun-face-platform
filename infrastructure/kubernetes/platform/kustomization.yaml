@@ -3,9 +3,9 @@ kind: Kustomization
 
 resources:
   - consul
-  - kafka
-  - keycloak
-  - milvus
-  - minio
-  - postgres
-  - redis
+#  - kafka
+#  - keycloak
+#  - milvus
+#  - minio
+#  - postgres
+#  - redis

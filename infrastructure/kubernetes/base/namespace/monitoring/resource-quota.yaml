@@ -2,18 +2,18 @@ apiVersion: v1
 kind: ResourceQuota
 
 metadata:
-  name: mrun-resource-quota
-  namespace: mrun
+  name: monitoring-resource-quota
+  namespace: mrun-monitoring
 
 spec:
   hard:
-    requests.cpu: "4"
+    requests.cpu: "2"
     requests.memory: 8Gi
 
-    limits.cpu: "8"
-    limits.memory: 16Gi
+    limits.cpu: "4"
+    limits.memory: 12Gi
 
-    pods: "50"
+    pods: "20"
 
     services: "20"
 

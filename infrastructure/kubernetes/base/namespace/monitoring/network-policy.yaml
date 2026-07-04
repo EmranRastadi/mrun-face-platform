@@ -3,7 +3,7 @@ kind: NetworkPolicy
 
 metadata:
   name: allow-all-internal
-  namespace: mrun
+  namespace: mrun-monitoring
 
 spec:
   podSelector: {}
@@ -16,4 +16,4 @@ spec:
     - {}
 
   egress:
-    - {}و
+    - {}

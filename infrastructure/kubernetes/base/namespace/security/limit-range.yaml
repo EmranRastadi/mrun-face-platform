@@ -3,7 +3,7 @@ kind: LimitRange
 
 metadata:
   name: mrun-limit-range
-  namespace: mrun
+  namespace: mrun-security
 
 spec:
   limits:

@@ -104,7 +104,7 @@ services:
       - mrun-network
     restart: unless-stopped
     volumes:
-      - ./apps/users-service:/app  # برای توسعه
+      - ./apps.yaml/users-service:/app  # برای توسعه
       - /app/node_modules
 
 
