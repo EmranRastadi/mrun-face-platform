@@ -5,17 +5,10 @@ import { ConsulService } from './consul.service';
 import { AppConfigService } from './config.service';
 
 @Module({
-    imports: [HttpModule],
+  imports: [HttpModule],
 
-    providers: [
-        ConsulService,
-        AppConfigService,
-        RegistrationService
-    ],
+  providers: [ConsulService, AppConfigService, RegistrationService],
 
-    exports: [
-        ConsulService,
-        AppConfigService,
-    ],
+  exports: [ConsulService, AppConfigService],
 })
 export class PlatformConfigModule {}

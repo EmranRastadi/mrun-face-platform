@@ -3,7 +3,7 @@ kind: Service
 
 metadata:
   name: postgres-headless
-  namespace: mrun-face-platform
+  namespace: mrun-system
 
 spec:
 

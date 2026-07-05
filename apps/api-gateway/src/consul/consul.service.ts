@@ -4,14 +4,11 @@ import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class ConsulService {
-  private readonly serviceName =
-      process.env.APP_NAME ?? 'unknown';
+  private readonly serviceName = process.env.APP_NAME ?? 'unknown';
 
-  private readonly servicePort =
-      Number(process.env.APP_PORT ?? 3000);
+  private readonly servicePort = Number(process.env.APP_PORT ?? 3000);
 
-  private readonly podIp =
-      process.env.POD_IP ?? '127.0.0.1';
+  private readonly podIp = process.env.POD_IP ?? '127.0.0.1';
   private readonly baseUrl = `http://${process.env.CONSUL_HOST}:${process.env.CONSUL_PORT}`;
 
   constructor(private readonly http: HttpService) {}
@@ -19,7 +16,7 @@ export class ConsulService {
   async get(key: string): Promise<string | undefined> {
     try {
       const { data } = await firstValueFrom(
-          this.http.get(`${this.baseUrl}/v1/kv/${key}`),
+        this.http.get(`${this.baseUrl}/v1/kv/${key}`),
       );
 
       if (!data.length) {
@@ -34,19 +31,15 @@ export class ConsulService {
 
   async put(key: string, value: string): Promise<void> {
     await firstValueFrom(
-        this.http.put(`${this.baseUrl}/v1/kv/${key}`, value, {
-          headers: {
-            'Content-Type': 'text/plain',
-          },
-        }),
+      this.http.put(`${this.baseUrl}/v1/kv/${key}`, value, {
+        headers: {
+          'Content-Type': 'text/plain',
+        },
+      }),
     );
   }
 
-  async registerService(): Promise<void> {
+  async registerService(): Promise<void> {}
 
-  }
-
-  async deregisterService(): Promise<void> {
-
-  }
+  async deregisterService(): Promise<void> {}
 }

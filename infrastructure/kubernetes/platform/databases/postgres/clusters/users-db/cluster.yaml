@@ -1,0 +1,39 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: users-db
+  namespace: mrun-database
+
+spec:
+  instances: 3
+
+  imageName: ghcr.io/cloudnative-pg/postgresql:17
+
+  storage:
+    size: 20Gi
+
+  bootstrap:
+    initdb:
+      database: users
+      owner: users
+      secret:
+        name: users-db-app
+
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+
+    enablePodMonitor: true
+
+  primaryUpdateStrategy: unsupervised
+
+  postgresql:
+    parameters:
+      max_connections: "200"
+      shared_buffers: "256MB"
+      effective_cache_size: "768MB"
+      work_mem: "4MB"
