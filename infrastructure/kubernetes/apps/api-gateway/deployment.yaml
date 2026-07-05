@@ -32,7 +32,7 @@ spec:
 
         - name: api-gateway
 
-          image: mrun/api-gateway:latest
+          image: mrun/api-gateway
 
           imagePullPolicy: IfNotPresent
 

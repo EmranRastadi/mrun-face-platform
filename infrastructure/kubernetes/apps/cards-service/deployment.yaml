@@ -32,13 +32,13 @@ spec:
 
         - name: cards-service
 
-          image: mrun/cards-service:latest
+          image: mrun/cards-service
 
           imagePullPolicy: IfNotPresent
 
           ports:
 
-            - containerPort: 3000
+            - containerPort: 8000
 
           envFrom:
 
@@ -62,7 +62,7 @@ spec:
 
             httpGet:
               path: /health
-              port: 3000
+              port: 8000
 
             periodSeconds: 5
             failureThreshold: 30
@@ -71,7 +71,7 @@ spec:
 
             httpGet:
               path: /health
-              port: 3000
+              port: 8000
 
             periodSeconds: 5
 
@@ -79,6 +79,6 @@ spec:
 
             httpGet:
               path: /health
-              port: 3000
+              port: 8000
 
             periodSeconds: 10

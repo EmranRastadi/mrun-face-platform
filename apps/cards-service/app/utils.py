@@ -1,35 +1,72 @@
-from pydantic import BaseModel
-from typing import Optional, List, Dict
-from datetime import datetime
+import logging
 
-class ServiceInfo(BaseModel):
-    name: str
-    version: str
-    environment: str
-    host: Optional[str] = None
-    port: Optional[int] = None
-    tags: List[str] = []
-    started_at: datetime = datetime.utcnow()
+try:
+    import consul
+except ImportError:
+    consul = None
 
-class HealthStatus(BaseModel):
-    service: str
-    status: str
-    version: str
-    uptime: float
-    checks: Dict[str, bool]
 
-class ServiceResponse(BaseModel):
-    success: bool
-    message: str
-    data: Optional[Dict] = None
-    service: str
-    version: str
-    timestamp: datetime = datetime.utcnow()
+def get_logger(name: str):
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+    )
+    return logging.getLogger(name)
 
-class Card(BaseModel):
-    id: Optional[int] = None
-    title: str
-    description: Optional[str] = None
-    status: str = "active"
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+
+class ConsulClient:
+    def __init__(self):
+        self.client = None
+
+        if consul:
+            try:
+                self.client = consul.Consul(host="localhost", port=8500)
+            except Exception:
+                self.client = None
+
+    def register_service(
+        self,
+        name: str,
+        port: int,
+        address: str = "localhost",
+        tags=None,
+    ):
+        if not self.client:
+            return
+
+        self.client.agent.service.register(
+            name=name,
+            service_id=name,
+            address=address,
+            port=port,
+            tags=tags or [],
+        )
+
+    def get_all_services(self):
+        if not self.client:
+            return {}
+
+        _, services = self.client.agent.services()
+        return services
+
+    def get_service(self, name: str):
+        if not self.client:
+            return None
+
+        _, services = self.client.health.service(name, passing=True)
+
+        if not services:
+            return None
+
+        service = services[0]["Service"]
+
+        return {
+            "ID": service["ID"],
+            "Service": service["Service"],
+            "Address": service["Address"],
+            "Port": service["Port"],
+            "Tags": service.get("Tags", []),
+        }
+
+
+consul_client = ConsulClient()

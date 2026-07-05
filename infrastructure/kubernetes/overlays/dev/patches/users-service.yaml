@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: users-service
+
+spec:
+  replicas: 1
+
+  template:
+    spec:
+      containers:
+        - name: users-service
+
+          imagePullPolicy: Never
+
+          env:
+            - name: APP_ENV
+              value: development

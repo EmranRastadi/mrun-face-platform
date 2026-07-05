@@ -1,15 +1,16 @@
-from pydantic import BaseModel
-from typing import Optional, List, Dict
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-class ServiceInfo(BaseModel):
-    name: str
+from pydantic import BaseModel, Field
+
+
+class ServiceResponse(BaseModel):
+    success: bool
+    message: str
+    data: Any
+    service: str
     version: str
-    environment: str
-    host: Optional[str] = None
-    port: Optional[int] = None
-    tags: List[str] = []
-    started_at: datetime = datetime.utcnow()
+
 
 class HealthStatus(BaseModel):
     service: str
@@ -18,18 +19,20 @@ class HealthStatus(BaseModel):
     uptime: float
     checks: Dict[str, bool]
 
-class ServiceResponse(BaseModel):
-    success: bool
-    message: str
-    data: Optional[Dict] = None
-    service: str
+
+class ServiceInfo(BaseModel):
+    name: str
     version: str
-    timestamp: datetime = datetime.utcnow()
+    environment: str
+    tags: List[str]
+    started_at: float
+
 
 class Card(BaseModel):
     id: Optional[int] = None
+
     title: str
     description: Optional[str] = None
-    status: str = "active"
+
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None

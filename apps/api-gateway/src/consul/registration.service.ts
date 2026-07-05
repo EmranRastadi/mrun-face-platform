@@ -1,22 +1,21 @@
 import {
     Injectable,
-    OnModuleInit,
-    OnModuleDestroy,
+    OnApplicationBootstrap,
+    OnApplicationShutdown,
 } from '@nestjs/common';
-
 import { ConsulService } from './consul.service';
 
 @Injectable()
 export class RegistrationService
-    implements OnModuleInit, OnModuleDestroy
+    implements OnApplicationBootstrap, OnApplicationShutdown
 {
     constructor(private readonly consul: ConsulService) {}
 
-    async onModuleInit() {
-        await this.consul.register();
+    async onApplicationBootstrap(): Promise<void> {
+        await this.consul.registerService();
     }
 
-    async onModuleDestroy() {
-        await this.consul.deregister();
+    async onApplicationShutdown(): Promise<void> {
+        await this.consul.deregisterService();
     }
 }

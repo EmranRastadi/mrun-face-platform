@@ -3,6 +3,7 @@ import time
 import httpx
 from contextlib import asynccontextmanager
 from typing import List
+from datetime import datetime
 
 from .config import settings
 from .models import ServiceInfo, HealthStatus, ServiceResponse, Card

@@ -1,13 +1,13 @@
-FROM python:3.9-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
-# نصب وابستگی‌ها
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
-# کپی کد
-COPY ./app /app
+RUN pip install -r requirements.txt
 
-# اجرا با uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+COPY . .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--reload"]

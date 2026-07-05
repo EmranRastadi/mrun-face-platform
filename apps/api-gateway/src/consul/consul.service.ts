@@ -1,55 +1,52 @@
 import { Injectable } from '@nestjs/common';
-import Consul from 'consul';
-
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class ConsulService {
   private readonly serviceName =
-      process.env.APP_NAME!;
+      process.env.APP_NAME ?? 'unknown';
 
   private readonly servicePort =
-      Number(process.env.APP_PORT);
+      Number(process.env.APP_PORT ?? 3000);
 
-  private readonly serviceAddress =
-      process.env.POD_IP!;
-  private readonly consul: Consul;
+  private readonly podIp =
+      process.env.POD_IP ?? '127.0.0.1';
+  private readonly baseUrl = `http://${process.env.CONSUL_HOST}:${process.env.CONSUL_PORT}`;
 
-  constructor() {
-    this.consul = new Consul({
-      host: process.env.CONSUL_HOST,
-      port: Number(process.env.CONSUL_PORT),
-    });
-  }
+  constructor(private readonly http: HttpService) {}
 
   async get(key: string): Promise<string | undefined> {
-    const item = await this.consul.kv.get(key);
+    try {
+      const { data } = await firstValueFrom(
+          this.http.get(`${this.baseUrl}/v1/kv/${key}`),
+      );
 
-    if (!item || item.Value == null) {
+      if (!data.length) {
+        return undefined;
+      }
+
+      return Buffer.from(data[0].Value, 'base64').toString('utf8');
+    } catch {
       return undefined;
     }
-
-    return Buffer.from(item.Value, 'base64').toString('utf8');
   }
 
-  async register() {
-    await this.consul.agent.service.register({
-      id: `${this.serviceName}-${this.serviceAddress}`,
-      name: this.serviceName,
-      address: this.serviceAddress,
-      port: this.servicePort,
-
-      check: {
-        name: `${this.serviceName}-health`,
-        http: `http://${this.serviceAddress}:${this.servicePort}/health`,
-        interval: '10s',
-        timeout: '5s',
-      },
-    });
-  }
-
-  async deregister() {
-    await this.consul.agent.service.deregister(
-        `${this.serviceName}-${this.serviceAddress}`,
+  async put(key: string, value: string): Promise<void> {
+    await firstValueFrom(
+        this.http.put(`${this.baseUrl}/v1/kv/${key}`, value, {
+          headers: {
+            'Content-Type': 'text/plain',
+          },
+        }),
     );
+  }
+
+  async registerService(): Promise<void> {
+
+  }
+
+  async deregisterService(): Promise<void> {
+
   }
 }

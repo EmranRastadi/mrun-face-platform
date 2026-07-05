@@ -1,0 +1,33 @@
+apiVersion: skaffold/v4beta13
+kind: Config
+
+metadata:
+  name: mrun-face-platform
+
+build:
+  local:
+    push: false
+
+  artifacts:
+    - image: mrun/api-gateway
+      context: apps/api-gateway
+      docker:
+        dockerfile: Dockerfile
+
+#    - image: mrun/users-service
+#      context: apps/users-service
+#      docker:
+#        dockerfile: Dockerfile
+
+    - image: mrun/cards-service
+      context: apps/cards-service
+      docker:
+        dockerfile: Dockerfile
+
+manifests:
+  kustomize:
+    paths:
+      - infrastructure/kubernetes
+
+deploy:
+  kubectl: {}
