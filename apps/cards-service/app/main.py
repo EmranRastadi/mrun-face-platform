@@ -16,22 +16,24 @@ START_TIME = time.time()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """مدیریت چرخه حیات"""
-    logger.info(f"🚀 Starting {settings.service_name} v{settings.service_version}")
-    
-    # ثبت در Consul
+
+    logger.info(f"Starting {settings.service_name}")
+
     if settings.consul_enabled:
+
+        pod_name = os.getenv("HOSTNAME")
+
         consul_client.register_service(
             name=settings.service_name,
-            port=8000,
-            address="mrun-cards",
-            tags=["fastapi", "cards", "v1"]
+            service_id=f"{settings.service_name}-{pod_name}",
+            address=pod_name,
+            port=8000
         )
-    
+
     yield
-    
-    # پاکسازی
-    logger.info(f"🛑 Shutting down {settings.service_name}")
+
+    logger.info("Stopping service")
+
 
 app = FastAPI(
     title="MRUN Cards Service",
@@ -59,6 +61,7 @@ async def root():
 @app.get("/health")
 async def health_check():
     uptime = time.time() - START_TIME
+    print("hi Emran")
     return HealthStatus(
         service=settings.service_name,
         status="healthy",

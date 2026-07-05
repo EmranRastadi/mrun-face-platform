@@ -27,6 +27,14 @@ pnpm-debug.log*
 # Python
 ###############################################################################
 
+# Byte-compiled / cache
+__pycache__/
+*/__pycache__/
+**/__pycache__/
+
+*.py[cod]
+*$py.class
+
 # Python virtualenvs
 venv/
 .venv/

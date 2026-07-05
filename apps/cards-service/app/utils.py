@@ -1,58 +1,41 @@
+import consul
 import logging
-
-try:
-    import consul
-except ImportError:
-    consul = None
-
+from .config import settings
 
 def get_logger(name: str):
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-    )
-    return logging.getLogger(name)
-
-
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+        )
+        return logging.getLogger(name)
 class ConsulClient:
+
     def __init__(self):
-        self.client = None
+        self.client = consul.Consul(
+            host=settings.consul_host,
+            port=settings.consul_port
+        )
 
-        if consul:
-            try:
-                self.client = consul.Consul(host="localhost", port=8500)
-            except Exception:
-                self.client = None
-
-    def register_service(
-        self,
-        name: str,
-        port: int,
-        address: str = "localhost",
-        tags=None,
-    ):
-        if not self.client:
-            return
+    def register_service(self, name, service_id, address, port):
 
         self.client.agent.service.register(
             name=name,
-            service_id=name,
+            service_id=service_id,
             address=address,
             port=port,
-            tags=tags or [],
+            check=consul.Check.http(
+                f"http://{address}:{port}/health",
+                interval="10s",
+                timeout="5s"
+            )
         )
 
-    def get_all_services(self):
-        if not self.client:
-            return {}
 
-        _, services = self.client.agent.services()
+    def get_all_services(self):
+        _, services = self.client.catalog.services()
         return services
 
-    def get_service(self, name: str):
-        if not self.client:
-            return None
-
+    def get_service(self, name):
         _, services = self.client.health.service(name, passing=True)
 
         if not services:
@@ -60,13 +43,10 @@ class ConsulClient:
 
         service = services[0]["Service"]
 
-        return {
-            "ID": service["ID"],
-            "Service": service["Service"],
-            "Address": service["Address"],
-            "Port": service["Port"],
-            "Tags": service.get("Tags", []),
-        }
+        return service
+
+    def deregister_service(self, service_id):
+        self.client.agent.service.deregister(service_id)
 
 
 consul_client = ConsulClient()
