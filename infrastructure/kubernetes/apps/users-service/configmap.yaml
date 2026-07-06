@@ -25,5 +25,6 @@ data:
   #######################  START POSTGRES ##########################
   DB_HOST: users-db-rw.mrun-database.svc.cluster.local
   DB_PORT: "5432"
-  DB_NAME: users
+  DB_USERNAME: "users_db"
+  DB_NAME: "users"
   #######################  END POSTGRES ##########################

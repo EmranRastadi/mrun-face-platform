@@ -7,11 +7,11 @@ import { validationSchema } from './config';
 
 @Module({
   imports: [
-    PlatformConfigModule,
+    // PlatformConfigModule,
      ConfigModule.forRoot({
       isGlobal: true,
-      load: [configuration],
-      validationSchema,
+      // load: [configuration],
+      // validationSchema,
     }),
 
     TypeOrmModule.forRootAsync(DatabaseConfig),

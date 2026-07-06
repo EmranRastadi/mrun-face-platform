@@ -18,9 +18,10 @@ data:
   # PostgreSQL
   ####################################
 
-  POSTGRES_HOST: postgres.mrun-system.svc.cluster.local
+  POSTGRES_HOST: cards-db-rw.mrun-database.svc.cluster.local
   POSTGRES_PORT: "5432"
-  POSTGRES_DB: cards_db
+  POSTGRES_DB: "cards_db"
+  DB_NAME: "cards"
 
   ####################################
   # DragonFlyDB
