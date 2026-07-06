@@ -1,37 +1,21 @@
-import {forwardRef, Module} from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { Module} from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import configuration from './config/configuration';
-import { getDatabaseConfig } from './config/database.config';
-import { APP_INTERCEPTOR } from '@nestjs/core';
-import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { PlatformConfigModule } from './consul';
+import { configuration, DatabaseConfig } from './config';
+import { validationSchema } from './config';
+
 @Module({
   imports: [
-    // ✅ بارگذاری Config با پشتیبانی از .env
-    ConfigModule.forRoot({
-      load: [configuration],
+    PlatformConfigModule,
+     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: [
-        '.env.local',    // محلی (اولویت بالاتر)
-        '.env',          // پیش‌فرض
-      ],
-      expandVariables: true, // ✅ پشتیبانی از ${VAR} در env
+      load: [configuration],
+      validationSchema,
     }),
-    forwardRef(() => ConsulModule),
-    // ✅ استفاده از Config برای Database
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: getDatabaseConfig,
-    }),
-    
-    // سایر ماژول‌ها...
+
+    TypeOrmModule.forRootAsync(DatabaseConfig),
   ],
-  providers: [
-        {
-      provide: APP_INTERCEPTOR,
-      useClass: LoggingInterceptor, // ✅ اینجا ConfigService تزریق می‌شود
-    },
-  ]
+  providers: []
 })
 export class AppModule {}

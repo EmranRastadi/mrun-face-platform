@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - api-gateway
   - cards-service
+  - users-service

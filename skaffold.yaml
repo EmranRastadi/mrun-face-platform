@@ -14,10 +14,10 @@ build:
       docker:
         dockerfile: Dockerfile
 
-#    - image: mrun/users-service
-#      context: apps/users-service
-#      docker:
-#        dockerfile: Dockerfile
+    - image: mrun/users-service
+      context: apps/users-service
+      docker:
+        dockerfile: Dockerfile
 
     - image: mrun/cards-service
       context: apps/cards-service

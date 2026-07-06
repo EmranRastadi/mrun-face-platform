@@ -1,9 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-// import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
-import { ConsulService } from './consul/consul.service';
+// import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { ConsulService } from './consul';
 import { ConfigService } from '@nestjs/config';
 import * as winston from 'winston';
 import { WinstonModule } from 'nest-winston';
@@ -31,7 +30,7 @@ async function bootstrap() {
   }));
 
   // Global Filters
-  app.useGlobalFilters(new HttpExceptionFilter());
+  // app.useGlobalFilters(new HttpExceptionFilter());
 
   // Global Interceptors
   // app.useGlobalInterceptors(new LoggingInterceptor());
@@ -40,8 +39,9 @@ async function bootstrap() {
   app.enableCors();
 
   // گرفتن Config
-  const configService = app.get(ConfigService);
-  const port = configService.get<number>('PORT', 8000);
+  // const configService = app.get(ConfigService);
+  // const port = configService.get<number>('PORT', 3000);
+  const port = 3000;
 
   // شروع سرور
   await app.listen(port, '0.0.0.0');
