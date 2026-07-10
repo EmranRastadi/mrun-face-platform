@@ -1,20 +1,26 @@
 import { Module} from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PlatformConfigModule } from './consul';
-import { configuration, DatabaseConfig } from './config';
-import { validationSchema } from './config';
+// import { PlatformConfigModule } from './consul';
+import {TypeORMConfigService} from "./config/ormconfig.service";
+import {UsersModule} from "./users/users.module";
 
 @Module({
   imports: [
-    // PlatformConfigModule,
+     // PlatformConfigModule,
      ConfigModule.forRoot({
       isGlobal: true,
       // load: [configuration],
       // validationSchema,
     }),
 
-    TypeOrmModule.forRootAsync(DatabaseConfig),
+      TypeOrmModule.forRootAsync({
+          useClass: TypeORMConfigService,
+          imports: [ConfigModule],
+      }),
+      UsersModule,
+
+    // TypeOrmModule.forRootAsync(DatabaseConfig),
   ],
   providers: []
 })

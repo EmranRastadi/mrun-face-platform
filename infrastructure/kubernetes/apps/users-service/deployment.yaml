@@ -43,9 +43,15 @@ spec:
             - configMapRef:
                 name: users-service-config
 
+
             - secretRef:
                 name: users-service-secret
 
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
           resources:
 
             requests:
@@ -56,6 +62,7 @@ spec:
               cpu: 500m
               memory: 512Mi
 
+          # TODO be careful
 #          startupProbe:
 #
 #            httpGet:

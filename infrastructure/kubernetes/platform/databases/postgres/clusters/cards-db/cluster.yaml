@@ -28,7 +28,7 @@ spec:
       memory: "2Gi"
 
   monitoring:
-    enablePodMonitor: true
+    enablePodMonitor: false
 
   primaryUpdateStrategy: unsupervised
 

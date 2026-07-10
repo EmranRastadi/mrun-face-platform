@@ -18,6 +18,10 @@ build:
       context: apps/users-service
       docker:
         dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "**/*.(ts|js)"
+            dest: /app
 
     - image: mrun/cards-service
       context: apps/cards-service
