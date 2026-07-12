@@ -4,4 +4,4 @@ kind: Kustomization
 resources:
   - platform
   - apps
-  - ingress-nginx
+#  - ingress-nginx

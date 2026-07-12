@@ -10,6 +10,7 @@ async function bootstrap() {
   // console.log(config.get('APP_ENV'));
 
   await app.listen(3000);
+  console.log(`Application Listen Port 3000`);
 }
 
 bootstrap();
