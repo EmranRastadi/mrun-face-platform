@@ -4,8 +4,8 @@ kind: Kustomization
 resources:
   # - cloudnative-pg
   # - postgres
-  - discovery/consul
-  - databases/postgres
+  - discovery
+  - databases
 
 #  - kafka
 #  - keycloak

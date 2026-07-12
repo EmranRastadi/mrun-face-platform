@@ -13,6 +13,10 @@ build:
       context: apps/api-gateway
       docker:
         dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "**/*.(ts|js)"
+            dest: /app
 
     - image: mrun/users-service
       context: apps/users-service

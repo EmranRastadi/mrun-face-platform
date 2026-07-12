@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import * as winston from 'winston';
 import { WinstonModule } from 'nest-winston';
+import { ConsulService } from './consul';
 
 async function bootstrap() {
   const logger = WinstonModule.createLogger({
@@ -42,16 +43,16 @@ async function bootstrap() {
   await app.listen(port, '0.0.0.0');
 
   // ثبت در Consul
-  // const consulService = app.get(ConsulService);
-  // try {
-  //   await consulService.registerService();
-  //   logger.log(`Registered with Consul`);
-  // } catch (error) {
-  //   logger.error(
-  //       'Failed to register with Consul',
-  //       error instanceof Error ? error.stack : String(error),
-  //   );
-  // }
+  const consulService = app.get(ConsulService);
+  try {
+    await consulService.registerService();
+    logger.log(`Registered with Consul`);
+  } catch (error) {
+    logger.error(
+        'Failed to register with Consul',
+        error instanceof Error ? error.stack : String(error),
+    );
+  }
 
   logger.log(`🚀 User Service is running on: http://localhost:${port}`);
   logger.log(`📘 Swagger: http://localhost:${port}/api`);
