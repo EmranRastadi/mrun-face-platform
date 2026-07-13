@@ -6,18 +6,18 @@ metadata:
   namespace: mrun-apps
 
 data:
-  NODE_ENV: production
+  NODE_ENV: "production"
 
   PORT: "80"
 
-  LOG_LEVEL: info
+  LOG_LEVEL: "info"
 
-  CONSUL_HOST: consul.mrun-system.svc.cluster.local
+  CONSUL_HOST: "consul.mrun-system.svc.cluster.local"
 
   CONSUL_PORT: "8500"
 
-  KAFKA_BROKERS: kafka.mrun-system.svc.cluster.local:9092
+  KAFKA_BROKERS: "kafka.mrun-system.svc.cluster.local:9092"
 
-  KEYCLOAK_URL: http://keycloak.mrun-security.svc.cluster.local:8080
+  KEYCLOAK_URL: "http://keycloak.mrun-security.svc.cluster.local:8080"
 
-  OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo.mrun-monitoring.svc.cluster.local:4318
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo.mrun-monitoring.svc.cluster.local:4318"

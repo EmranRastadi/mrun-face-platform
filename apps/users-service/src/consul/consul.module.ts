@@ -1,20 +1,15 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { RegistrationService } from './registration.service';
 import { ConsulService } from './consul.service';
-import {AppConfigService} from "./config.service";
+import { AppConfigService } from './config.service';
 
+@Global()
 @Module({
   imports: [HttpModule],
 
-  providers: [
-      // ConsulService,
-    AppConfigService,
-    RegistrationService],
+  providers: [ConsulService, AppConfigService, RegistrationService],
 
-  exports: [
-      // ConsulService,
-    // AppConfigService
-  ],
+  exports: [ConsulService, AppConfigService],
 })
 export class PlatformConfigModule {}

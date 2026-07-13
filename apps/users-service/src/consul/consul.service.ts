@@ -21,7 +21,7 @@ export class ConsulService {
   }
 
   private get servicePort(): number {
-    return this.config.get<number>('PORT', 3000);
+    return Number(this.config.get<string>('PORT', '3000'));
   }
 
   private get podIp(): string {
@@ -57,6 +57,11 @@ export class ConsulService {
 
   async registerService(): Promise<void> {
     try {
+      this.logger.log('***************************', {
+        podIp: this.podIp,
+        port: this.servicePort,
+        type: typeof this.servicePort,
+      });
       await firstValueFrom(
           this.http.put(`${this.baseUrl}/v1/agent/service/register`, {
             ID: this.serviceName,

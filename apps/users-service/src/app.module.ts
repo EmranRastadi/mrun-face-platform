@@ -1,13 +1,14 @@
 import { Module} from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-// import { PlatformConfigModule } from './consul';
+import { PlatformConfigModule } from './consul';
 import {TypeORMConfigService} from "./config/ormconfig.service";
 import {UsersModule} from "./users/users.module";
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
-     // PlatformConfigModule,
+     PlatformConfigModule,
      ConfigModule.forRoot({
       isGlobal: true,
       // load: [configuration],
@@ -22,6 +23,7 @@ import {UsersModule} from "./users/users.module";
 
     // TypeOrmModule.forRootAsync(DatabaseConfig),
   ],
+  controllers: [AppController],
   providers: []
 })
 export class AppModule {}
