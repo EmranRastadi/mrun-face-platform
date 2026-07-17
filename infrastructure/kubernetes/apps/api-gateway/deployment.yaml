@@ -4,6 +4,10 @@ kind: Deployment
 metadata:
   name: api-gateway
   namespace: mrun-apps
+  labels:
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/part-of: mrun-platform
+    app.kubernetes.io/component: gateway
 
 spec:
   replicas: 1
@@ -13,18 +17,17 @@ spec:
 
   selector:
     matchLabels:
-      app: api-gateway
+      app.kubernetes.io/name: api-gateway
 
   template:
-
     metadata:
       labels:
-        app: api-gateway
+        app.kubernetes.io/name: api-gateway
+        app.kubernetes.io/part-of: mrun-platform
+        app.kubernetes.io/component: gateway
 
     spec:
-
       serviceAccountName: api-gateway
-
       securityContext:
         fsGroup: 1000
 

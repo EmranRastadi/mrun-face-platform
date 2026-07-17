@@ -4,6 +4,10 @@ kind: Deployment
 metadata:
   name: cards-service
   namespace: mrun-apps
+  labels:
+    app.kubernetes.io/name: cards-service
+    app.kubernetes.io/part-of: mrun-platform
+    app.kubernetes.io/component: vision
 
 spec:
   replicas: 1
@@ -13,13 +17,15 @@ spec:
 
   selector:
     matchLabels:
-      app: cards-service
+      app.kubernetes.io/name: cards-service
 
   template:
 
     metadata:
       labels:
-        app: cards-service
+        app.kubernetes.io/name: cards-service
+        app.kubernetes.io/part-of: mrun-platform
+        app.kubernetes.io/component: vision
 
     spec:
 

@@ -5,14 +5,17 @@ metadata:
   name: api-gateway
   namespace: mrun-apps
 
+  labels:
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/part-of: mrun-platform
+    app.kubernetes.io/component: gateway
   annotations:
     consul.hashicorp.com/service-name: api-gateway
     consul.hashicorp.com/service-port: "80"
 
 spec:
   selector:
-    app: api-gateway
-
+    app.kubernetes.io/name: api-gateway
   ports:
     - name: http
       port: 80

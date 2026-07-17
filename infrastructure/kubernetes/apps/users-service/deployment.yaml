@@ -4,6 +4,11 @@ kind: Deployment
 metadata:
   name: users-service
   namespace: mrun-apps
+  labels:
+    app.kubernetes.io/name: users-service
+    app.kubernetes.io/part-of: mrun-platform
+    app.kubernetes.io/component: identity
+
 
 spec:
   replicas: 1
@@ -11,15 +16,19 @@ spec:
   strategy:
     type: RollingUpdate
 
+#  We Say All Pods have name = users-service those mine Pods
   selector:
     matchLabels:
-      app: users-service
+      app.kubernetes.io/name: users-service
+
 
   template:
-
+#    From This Time All Of You Will make pods those name is users-service
     metadata:
       labels:
-        app: users-service
+        app.kubernetes.io/name: users-service
+        app.kubernetes.io/part-of: mrun-platform
+        app.kubernetes.io/component: identity
     spec:
 
       serviceAccountName: users-service
