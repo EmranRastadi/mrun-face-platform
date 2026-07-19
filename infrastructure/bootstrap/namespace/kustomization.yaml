@@ -4,7 +4,7 @@ kind: Kustomization
 resources:
   - database
   - apps
-  - ingress
+  - kafka-system
 #  - monitoring
 #  - security
   - system

@@ -1,8 +1,9 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
+
 metadata:
-  name: default-deny
-  namespace: mrun-ingress
+  name: allow-all-internal
+  namespace: mrun-kafka-system
 spec:
   podSelector: {}
   policyTypes:

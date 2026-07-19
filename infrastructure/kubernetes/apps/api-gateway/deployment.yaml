@@ -79,7 +79,6 @@ spec:
             periodSeconds: 5
 
           livenessProbe:
-
             httpGet:
               path: /health
               port: 3000

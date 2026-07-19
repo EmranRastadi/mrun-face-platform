@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: mrun-ingress
-  labels:
-    app.kubernetes.io/name: ingress
-    app.kubernetes.io/part-of: mrun
