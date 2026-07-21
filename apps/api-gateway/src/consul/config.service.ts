@@ -9,8 +9,7 @@ export class AppConfigService implements OnModuleInit {
   public keycloakUrl!: string;
 
   async onModuleInit(): Promise<void> {
-    this.kafkaBroker = (await this.consul.get('mrun/kafka/brokers')) ?? '';
-
-    this.keycloakUrl = (await this.consul.get('mrun/keycloak/url')) ?? '';
+    // this.kafkaBroker = (await this.consul.get('mrun/kafka/brokers')) ?? '';
+    // this.keycloakUrl = (await this.consul.get('mrun/keycloak/url')) ?? '';
   }
 }

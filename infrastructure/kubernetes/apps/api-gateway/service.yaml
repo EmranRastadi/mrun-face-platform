@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/component: gateway
   annotations:
     consul.hashicorp.com/service-name: api-gateway
-    consul.hashicorp.com/service-port: "80"
+    consul.hashicorp.com/service-port: "3000"
 
 spec:
   selector:

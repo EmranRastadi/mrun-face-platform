@@ -51,6 +51,11 @@ spec:
             - secretRef:
                 name: api-gateway-secret
 
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
           resources:
 
             requests:
@@ -61,26 +66,26 @@ spec:
               cpu: 500m
               memory: 512Mi
 
-          startupProbe:
-
-            httpGet:
-              path: /health
-              port: 3000
-
-            periodSeconds: 5
-            failureThreshold: 30
-
-          readinessProbe:
-
-            httpGet:
-              path: /health
-              port: 3000
-
-            periodSeconds: 5
-
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 3000
-
-            periodSeconds: 10
+#          startupProbe:
+#
+#            httpGet:
+#              path: /health
+#              port: 3000
+#
+#            periodSeconds: 5
+#            failureThreshold: 30
+#
+#          readinessProbe:
+#
+#            httpGet:
+#              path: /health
+#              port: 3000
+#
+#            periodSeconds: 5
+#
+#          livenessProbe:
+#            httpGet:
+#              path: /health
+#              port: 3000
+#
+#            periodSeconds: 10

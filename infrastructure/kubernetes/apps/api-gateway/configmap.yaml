@@ -7,13 +7,12 @@ metadata:
 
 data:
   NODE_ENV: "production"
-
+  SERVICE_NAME: "api-gateway"
   PORT: "80"
 
   LOG_LEVEL: "info"
 
   CONSUL_HOST: "consul.mrun-system.svc.cluster.local"
-
   CONSUL_PORT: "8500"
 
   KAFKA_BROKERS: "kafka.mrun-system.svc.cluster.local:9092"

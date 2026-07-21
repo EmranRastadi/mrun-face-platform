@@ -1,6 +1,4 @@
 node_modules
-.git
+**/node_modules
 dist
-build
-coverage
-.next
+.git
