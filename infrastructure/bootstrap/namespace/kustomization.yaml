@@ -5,6 +5,6 @@ resources:
   - database
   - apps
   - kafka-system
-#  - monitoring
 #  - security
   - system
+  - monitoring

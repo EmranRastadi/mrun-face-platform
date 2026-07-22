@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mrun-grafana-pvc
+  name: grafana-pvc
   namespace: mrun-monitoring
 spec:
   accessModes:

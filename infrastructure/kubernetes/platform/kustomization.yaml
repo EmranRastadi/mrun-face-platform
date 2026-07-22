@@ -6,7 +6,7 @@ resources:
   # - postgres
   - discovery
   - databases
-
+  - monitoring
 #  - kafka
 #  - keycloak
 #  - milvus

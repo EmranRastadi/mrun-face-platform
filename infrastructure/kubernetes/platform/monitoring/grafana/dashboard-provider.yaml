@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: mrun-grafana-dashboard-provider
+  name: grafana-dashboard-provider
   namespace: mrun-monitoring
 data:
   provider.yaml: |

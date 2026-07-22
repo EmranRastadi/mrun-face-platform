@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: mrun-grafana-datasources
+  name: grafana-datasources
   namespace: mrun-monitoring
 data:
   datasources.yaml: |
