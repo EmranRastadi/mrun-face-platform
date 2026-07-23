@@ -1,0 +1,21 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+
+metadata:
+  name: kafka
+  namespace: mrun-messaging
+
+spec:
+  kafka:
+    version: 4.0.0
+    metadataVersion: 4.0-IV3
+
+    listeners:
+      - name: internal
+        port: 9092
+        type: internal
+        tls: false
+
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}

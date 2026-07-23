@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ResourceQuota
 metadata:
   name: namespace-quota
-  namespace: mrun-kafka-system
+  namespace: mrun-messaging
 spec:
   hard:
     requests.cpu: "8"

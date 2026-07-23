@@ -3,7 +3,7 @@ kind: NetworkPolicy
 
 metadata:
   name: allow-all-internal
-  namespace: mrun-kafka-system
+  namespace: mrun-messaging
 spec:
   podSelector: {}
   policyTypes:

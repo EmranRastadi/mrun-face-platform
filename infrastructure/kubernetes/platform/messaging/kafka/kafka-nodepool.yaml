@@ -1,0 +1,25 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+
+metadata:
+  name: kafka
+  namespace: mrun-messaging
+  annotations:
+    strimzi.io/node-pools: enabled
+    strimzi.io/kraft: enabled
+  labels:
+    strimzi.io/cluster: kafka
+
+spec:
+  replicas: 3
+
+  roles:
+    - controller
+    - broker
+
+  storage:
+    type: persistent-claim
+    size: 20Gi
+    deleteClaim: false
+
+    kraftMetadata: shared
