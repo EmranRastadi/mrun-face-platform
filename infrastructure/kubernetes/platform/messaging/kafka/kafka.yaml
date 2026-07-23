@@ -2,8 +2,11 @@ apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 
 metadata:
-  name: kafka
+  name: mrun-face-platform
   namespace: mrun-messaging
+  annotations:
+    strimzi.io/node-pools: enabled
+    strimzi.io/kraft: enabled
 
 spec:
   kafka:

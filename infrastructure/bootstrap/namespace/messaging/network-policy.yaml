@@ -1,11 +1,30 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
-
 metadata:
-  name: allow-all-internal
+  name: messaging-netpol
   namespace: mrun-messaging
 spec:
   podSelector: {}
   policyTypes:
     - Ingress
     - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: messaging
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: apps
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: messaging
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 9090

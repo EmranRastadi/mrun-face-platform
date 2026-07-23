@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: strimzi-kafka
+  labels:
+    app: strimzi-operator
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: strimzi-cluster-operator
+  namespace: mrun-strimzi-kafka
+  labels:
+    app: strimzi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: strimzi-cluster-operator
+  template:
+    metadata:
+      labels:
+        name: strimzi-cluster-operator
+    spec:
+      serviceAccountName: strimzi-cluster-operator
+      containers:
+        - name: cluster-operator
+          image: quay.io/strimzi/operator:0.40.0
+          env:
+            - name: STRIMZI_NAMESPACE
+              value: ""
+            - name: STRIMZI_FULL_RECONCILE_INTERVAL_MS
+              value: "120000"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: strimzi-cluster-operator
+  namespace: mrun-strimzi-kafka
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: strimzi-cluster-operator
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - secrets
+      - serviceaccounts
+      - services
+      - persistentvolumeclaims
+      - events
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - watch
+      - update
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+      - statefulsets
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - watch
+      - update
+  - apiGroups:
+      - kafka.strimzi.io
+    resources:
+      - kafkas
+      - kafkatopics
+      - kafkausers
+      - kafkaconnectors
+      - kafkaconnects
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - watch
+      - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: strimzi-cluster-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: strimzi-cluster-operator
+subjects:
+  - kind: ServiceAccount
+    name: strimzi-cluster-operator
+    namespace: mrun-strimzi-kafka

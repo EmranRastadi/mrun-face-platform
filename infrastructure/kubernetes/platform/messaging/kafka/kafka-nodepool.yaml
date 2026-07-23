@@ -4,11 +4,9 @@ kind: KafkaNodePool
 metadata:
   name: kafka
   namespace: mrun-messaging
-  annotations:
-    strimzi.io/node-pools: enabled
-    strimzi.io/kraft: enabled
   labels:
-    strimzi.io/cluster: kafka
+    strimzi.io/cluster: mrun-face-platform
+
 
 spec:
   replicas: 3
@@ -21,5 +19,3 @@ spec:
     type: persistent-claim
     size: 20Gi
     deleteClaim: false
-
-    kraftMetadata: shared

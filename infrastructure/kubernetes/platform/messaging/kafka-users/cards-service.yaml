@@ -5,7 +5,7 @@ metadata:
   name: cards-service
   namespace: mrun-messaging
   labels:
-    strimzi.io/cluster: kafka
+    strimzi.io/cluster: mrun-face-platform
 
 spec:
   authentication:

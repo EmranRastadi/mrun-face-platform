@@ -1,0 +1,18 @@
+# Prometheus ServiceMonitor for Strimzi Kafka
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kafka-cluster-monitor
+  namespace: mrun-messaging
+  labels:
+    strimzi.io/cluster: mrun-face-platform
+spec:
+  selector:
+    matchLabels:
+      strimzi.io/cluster: mrun-face-platform
+  endpoints:
+    - port: metrics
+      interval: 30s
+  namespaceSelector:
+    matchNames:
+      - messaging
