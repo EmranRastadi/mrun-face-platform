@@ -1,0 +1,25 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: worker-service-user
+#  namespace: mrun-messaging
+  labels:
+    strimzi.io/cluster: main-cluster
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    type: simple
+    acls:
+      - resource:
+          type: topic
+          name: worker.jobs
+          patternType: literal
+        operation: ReadWrite
+        host: "*"
+      - resource:
+          type: group
+          name: worker-service-group
+          patternType: literal
+        operation: Read
+        host: "*"

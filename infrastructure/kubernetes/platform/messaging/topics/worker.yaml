@@ -1,0 +1,13 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: worker.jobs
+  namespace: mrun-messaging
+  labels:
+    strimzi.io/cluster: main-cluster
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 86400000 # 1 Day
+    segment.bytes: 536870912 # 512MiB

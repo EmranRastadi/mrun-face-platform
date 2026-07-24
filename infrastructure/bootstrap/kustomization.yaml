@@ -3,5 +3,5 @@ kind: Kustomization
 
 resources:
   - namespace
-  - cloudnative-pg
   - strimzi
+  - cloudnative-pg

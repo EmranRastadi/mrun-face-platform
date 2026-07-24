@@ -1,12 +1,179 @@
+# 1. API Gateway User
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaUser
-
 metadata:
-  name: api-gateway
-  namespace: mrun-messaging
+  name: api-gateway-user
+  # Namespace handled by Kustomization
   labels:
-    strimzi.io/cluster: mrun-face-platform
-
+    strimzi.io/cluster: main-cluster
 spec:
   authentication:
     type: scram-sha-512
+  authorization:
+    type: simple
+    acls:
+      - resource:
+          type: topic
+          name: users.events
+          patternType: literal
+        operation: Read
+        host: "*"
+
+---
+# 2. Users Service User
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: users-service-user
+  labels:
+    strimzi.io/cluster: main-cluster
+spec:
+  authentication:
+    type: scram-sha-512
+  template:
+    secret:
+      metadata:
+        annotations:
+          # اجازه کپی شدن این Secret را صادر می‌کند
+          reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
+          # فقط اجازه می‌دهد Secret در نیم‌اسپیس اپلیکیشن‌های شما کپی شود
+          reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces: "mrun-apps"
+          # به Reflector می‌گوید خودش Secret را در نیم‌اسپیس مقصد بسازد (Auto-Sync)
+          reflector.v1.k8s.emberstack.com/reflection-auto-enabled: "true"
+  authorization:
+    type: simple
+    acls:
+      # Split Read and Write operations
+      - resource:
+          type: topic
+          name: users.events
+          patternType: literal
+        operation: Read
+        host: "*"
+      - resource:
+          type: topic
+          name: users.events
+          patternType: literal
+        operation: Write
+        host: "*"
+      - resource:
+          type: group
+          name: users-service-group
+          patternType: literal
+        operation: Read
+        host: "*"
+
+---
+# 3. Cards Service User
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: cards-service-user
+  labels:
+    strimzi.io/cluster: main-cluster
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    type: simple
+    acls:
+      - resource:
+          type: topic
+          name: cards.events
+          patternType: literal
+        operation: Read
+        host: "*"
+      - resource:
+          type: topic
+          name: cards.events
+          patternType: literal
+        operation: Write
+        host: "*"
+      - resource:
+          type: topic
+          name: similarity.events
+          patternType: literal
+        operation: Read
+        host: "*"
+      - resource:
+          type: group
+          name: cards-service-group
+          patternType: literal
+        operation: Read
+        host: "*"
+
+---
+# 4. Similarity Service User
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: similarity-service-user
+  labels:
+    strimzi.io/cluster: main-cluster
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    type: simple
+    acls:
+      - resource:
+          type: topic
+          name: similarity.events
+          patternType: literal
+        operation: Read
+        host: "*"
+      - resource:
+          type: topic
+          name: similarity.events
+          patternType: literal
+        operation: Write
+        host: "*"
+      - resource:
+          type: group
+          name: similarity-service-group
+          patternType: literal
+        operation: Read
+        host: "*"
+
+---
+# 5. Worker Service User
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: worker-service-user
+  labels:
+    strimzi.io/cluster: main-cluster
+spec:
+  authentication:
+    type: scram-sha-512
+  template:
+    secret:
+      metadata:
+        annotations:
+          # اجازه کپی شدن این Secret را صادر می‌کند
+          reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
+          # فقط اجازه می‌دهد Secret در نیم‌اسپیس اپلیکیشن‌های شما کپی شود
+          reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces: "mrun-apps"
+          # به Reflector می‌گوید خودش Secret را در نیم‌اسپیس مقصد بسازد (Auto-Sync)
+          reflector.v1.k8s.emberstack.com/reflection-auto-enabled: "true"
+  authorization:
+    type: simple
+    acls:
+      - resource:
+          type: topic
+          name: worker.jobs
+          patternType: literal
+        operation: Read
+        host: "*"
+      - resource:
+          type: topic
+          name: worker.jobs
+          patternType: literal
+        operation: Write
+        host: "*"
+      - resource:
+          type: group
+          name: worker-service-group
+          patternType: literal
+        operation: Read
+        host: "*"

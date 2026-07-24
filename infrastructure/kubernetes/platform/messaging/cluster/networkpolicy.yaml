@@ -1,0 +1,33 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kafka-network-policy
+  namespace: mrun-messaging
+spec:
+  podSelector:
+    matchLabels:
+      strimzi.io/cluster: main-cluster
+  policyTypes:
+    - Ingress
+  ingress:
+    # Allow intra-cluster communication within mrun-messaging namespace
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: mrun-messaging
+    # Allow application traffic from 'apps' namespace
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: apps
+      ports:
+        - protocol: TCP
+          port: 9093
+    # Allow Prometheus monitoring scraping
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 9404

@@ -1,0 +1,10 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: kafka-pdb
+  namespace: mrun-messaging
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      strimzi.io/cluster: main-cluster

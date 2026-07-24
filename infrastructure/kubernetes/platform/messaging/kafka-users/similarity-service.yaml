@@ -1,0 +1,25 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: similarity-service-user
+#  namespace: mrun-messaging
+  labels:
+    strimzi.io/cluster: main-cluster
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    type: simple
+    acls:
+      - resource:
+          type: topic
+          name: similarity.events
+          patternType: literal
+        operation: ReadWrite
+        host: "*"
+      - resource:
+          type: group
+          name: similarity-service-group
+          patternType: literal
+        operation: Read
+        host: "*"
