@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: mrun-monitoring
+data:
+  example-dashboard.json: |
+    {
+      "title": "Example Dashboard",
+      "panels": []
+    }
