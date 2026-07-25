@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+
+metadata:
+  name: mrun-kafka
+  namespace: mrun-messaging
+
+spec:
+  selector:
+    matchLabels:
+      strimzi.io/cluster: mrun-kafka
+
+  endpoints:
+    - port: tcp-prometheus
+      interval: 30s

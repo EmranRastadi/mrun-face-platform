@@ -1,0 +1,45 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+
+metadata:
+  name: mrun-app-user
+  namespace: mrun-messaging
+
+  labels:
+    strimzi.io/cluster: mrun-kafka
+
+spec:
+  authentication:
+    type: scram-sha-512
+
+  authorization:
+    type: simple
+
+    acls:
+      - resource:
+          type: topic
+          name: users.events
+        operations:
+          - Read
+          - Write
+
+      - resource:
+          type: topic
+          name: cards.events
+        operations:
+          - Read
+          - Write
+
+      - resource:
+          type: topic
+          name: camera.events
+        operations:
+          - Read
+          - Write
+
+      - resource:
+          type: topic
+          name: similarity.jobs
+        operations:
+          - Read
+          - Write
