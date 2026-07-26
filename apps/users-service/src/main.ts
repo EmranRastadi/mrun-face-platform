@@ -18,6 +18,8 @@ async function bootstrap() {
     ],
   });
 
+  
+
   const app = await NestFactory.create(AppModule, { logger });
 
   app.enableShutdownHooks();
@@ -38,7 +40,8 @@ async function bootstrap() {
   // گرفتن Config
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT', 3000);
-
+  const KafkaTopics = configService.get<string>('KAFKA_BROKERS', "test");
+  console.log(`Kafka brokers: ${KafkaTopics}...`);
   // شروع سرور
   await app.listen(port, '0.0.0.0');
 

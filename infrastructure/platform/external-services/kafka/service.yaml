@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  namespace: mrun-messaging
+
+spec:
+  ports:
+    - port: 9092
+      targetPort: 9092
+
+

@@ -5,6 +5,7 @@ import { PlatformConfigModule } from './consul';
 import {TypeORMConfigService} from "./config/ormconfig.service";
 import {UsersModule} from "./users/users.module";
 import { AppController } from './app.controller';
+import { KafkaModule } from './kafka/kafka.module';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { AppController } from './app.controller';
       // load: [configuration],
       // validationSchema,
     }),
-
+      KafkaModule,
       TypeOrmModule.forRootAsync({
           useClass: TypeORMConfigService,
           imports: [ConfigModule],
@@ -24,6 +25,6 @@ import { AppController } from './app.controller';
     // TypeOrmModule.forRootAsync(DatabaseConfig),
   ],
   controllers: [AppController],
-  providers: []
+  providers: [],
 })
 export class AppModule {}

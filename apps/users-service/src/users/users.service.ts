@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -9,13 +10,15 @@ import * as bcrypt from "bcryptjs";
 import { User } from './users.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ConfigService } from '@nestjs/config';
+import { KafkaService } from '../kafka/kafka.service';
+import { Topics } from 'src/kafka/topics';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    private kafka: KafkaService,
     // private configService: ConfigService 
   ) {
     // const dbHost = this.configService.get('database.host');
@@ -43,7 +46,15 @@ export class UsersService {
       password: hashedPassword,
     });
 
-    return this.usersRepository.save(user);
+    const savedUser = await this.usersRepository.save(user);
+
+    await this.kafka.emit(Topics.USER_CREATED, {
+      userId: savedUser.id,
+      username: savedUser.username,
+      email: savedUser.email,
+    });
+
+    return savedUser;
   }
 
   async findAll(): Promise<User[]> {
