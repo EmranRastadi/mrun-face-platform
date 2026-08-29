@@ -19,4 +19,7 @@ data:
 
   KEYCLOAK_URL: "http://keycloak.mrun-security.svc.cluster.local:8080"
 
+  USERS_SERVICE_URL: "http://users-service:3000"
+  ORDERS_SERVICE_URL: "http://orders-service:3000"
+
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo.mrun-monitoring.svc.cluster.local:4318"
