@@ -1,5 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
+import axios from 'axios';
 
 @Controller()
 export class AppController {
@@ -15,15 +16,11 @@ export class AppController {
       status: 'ok',
     };
   }
-  @Get('users')
-  users() {
-    return {
-      results: [
-        {
-          name: 'emran',
-          age: 33,
-        },
-      ],
-    };
-  }
+  // @Get('users')
+  // async users() {
+  //   const usersList = await axios.get(`${process.env.USERS_SERVICE_URL}/users`);
+  //   return {
+  //     results: usersList,
+  //   };
+  // }
 }

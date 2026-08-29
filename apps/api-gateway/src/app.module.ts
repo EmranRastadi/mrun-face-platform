@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PlatformConfigModule } from './consul';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { UsersModule } from './users-service/users.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { AppService } from './app.service';
       envFilePath: ['.env.local', '.env'],
       expandVariables: true,
     }),
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

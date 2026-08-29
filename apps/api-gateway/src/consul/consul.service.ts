@@ -8,8 +8,8 @@ export class ConsulService {
   private readonly logger = new Logger(ConsulService.name);
 
   constructor(
-      private readonly http: HttpService,
-      private readonly config: ConfigService,
+    private readonly http: HttpService,
+    private readonly config: ConfigService,
   ) {}
 
   private get baseUrl(): string {
@@ -31,7 +31,7 @@ export class ConsulService {
   async get(key: string): Promise<string | undefined> {
     try {
       const { data } = await firstValueFrom(
-          this.http.get(`${this.baseUrl}/v1/kv/${key}`),
+        this.http.get(`${this.baseUrl}/v1/kv/${key}`),
       );
 
       if (!data?.length) {
@@ -47,11 +47,11 @@ export class ConsulService {
 
   async put(key: string, value: string): Promise<void> {
     await firstValueFrom(
-        this.http.put(`${this.baseUrl}/v1/kv/${key}`, value, {
-          headers: {
-            'Content-Type': 'text/plain',
-          },
-        }),
+      this.http.put(`${this.baseUrl}/v1/kv/${key}`, value, {
+        headers: {
+          'Content-Type': 'text/plain',
+        },
+      }),
     );
   }
 
@@ -63,22 +63,20 @@ export class ConsulService {
         type: typeof this.servicePort,
       });
       await firstValueFrom(
-          this.http.put(`${this.baseUrl}/v1/agent/service/register`, {
-            ID: this.serviceName,
-            Name: this.serviceName,
-            Address: this.podIp,
-            Port: this.servicePort,
-            Check: {
-              HTTP: `http://${this.podIp}:${this.servicePort}/health`,
-              Interval: '10s',
-              Timeout: '5s',
-            },
-          }),
+        this.http.put(`${this.baseUrl}/v1/agent/service/register`, {
+          ID: this.serviceName,
+          Name: this.serviceName,
+          Address: this.podIp,
+          Port: this.servicePort,
+          Check: {
+            HTTP: `http://${this.podIp}:${this.servicePort}/health`,
+            Interval: '10s',
+            Timeout: '5s',
+          },
+        }),
       );
 
-      this.logger.log(
-          `Registered service "${this.serviceName}" with Consul`,
-      );
+      this.logger.log(`Registered service "${this.serviceName}" with Consul`);
     } catch (error) {
       this.logger.error('Failed to register service with Consul', error);
       throw error;
@@ -88,14 +86,12 @@ export class ConsulService {
   async deregisterService(): Promise<void> {
     try {
       await firstValueFrom(
-          this.http.put(
-              `${this.baseUrl}/v1/agent/service/deregister/${this.serviceName}`,
-          ),
+        this.http.put(
+          `${this.baseUrl}/v1/agent/service/deregister/${this.serviceName}`,
+        ),
       );
 
-      this.logger.log(
-          `Deregistered service "${this.serviceName}" from Consul`,
-      );
+      this.logger.log(`Deregistered service "${this.serviceName}" from Consul`);
     } catch (error) {
       this.logger.error('Failed to deregister service from Consul', error);
     }

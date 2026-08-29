@@ -5,7 +5,7 @@ import * as winston from 'winston';
 import { WinstonModule } from 'nest-winston';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-
+import axios from 'axios';
 async function bootstrap() {
   const logger = WinstonModule.createLogger({
     transports: [
@@ -40,9 +40,15 @@ async function bootstrap() {
   // گرفتن Config
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT', 3000);
-
   // شروع سرور
+
+  const userService = configService.get<string>(
+    'USERS_SERVICE_URL',
+    'http://users-service:3000',
+  );
   await app.listen(port, '0.0.0.0');
+
+  await axios.get(`${userService}/users`);
 
   // ثبت در Consul
   const consulService = app.get(ConsulService);
