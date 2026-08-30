@@ -3,12 +3,9 @@ kind: Endpoints
 metadata:
   name: kafka
   namespace: mrun-messaging
-  labels:
-    app.kubernetes.io/name: kafka
-    app.kubernetes.io/component: external-service
 subsets:
   - addresses:
-      - ip: 127.0.0.1
+      - ip: 10.239.14.112
     ports:
       - name: kafka
         port: 9092

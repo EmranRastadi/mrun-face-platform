@@ -3,11 +3,13 @@ kind: Service
 metadata:
   name: kafka
   namespace: mrun-messaging
-
+  labels:
+    app.kubernetes.io/name: kafka
+    app.kubernetes.io/component: external-service
 spec:
   type: ClusterIP
   ports:
-    - port: 9092
+    - name: kafka
+      port: 9092
       targetPort: 9092
-
-
+      protocol: TCP
