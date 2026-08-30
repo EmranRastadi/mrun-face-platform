@@ -5,6 +5,6 @@ metadata:
   namespace: mrun-messaging
 subsets:
   - addresses:
-      - ip: 172.20.41.38
+      - ip: 10.239.14.112
     ports:
       - port: 9092

@@ -1,6 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
+import {UserCreateDto} from "./dto/user-create.dto";
 
 @Injectable()
 export class UsersService {
@@ -18,11 +19,11 @@ export class UsersService {
       return { results: users.data };
     } catch (e) {}
   }
-  async createUser() {
+  async createUser(body: UserCreateDto) {
     try {
       const users: AxiosResponse<any, any> = await axios(
         `${this.userBaseUrl}/users`,
-        { method: 'Get' },
+        { method: 'Post' , data: body },
       );
       return { results: users.data };
     } catch (e) {}
