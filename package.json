@@ -1,0 +1,27 @@
+{
+  "name": "mrun-face-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MRUN face recognition platform — NestJS + FastAPI microservices monorepo",
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "install:all": "pnpm install",
+    "build": "turbo run build",
+    "dev": "turbo run start:dev --parallel",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,js,json,yaml,yml,md}\"",
+    "proto:gen": "buf generate",
+    "proto:lint": "buf lint",
+    "clean": "turbo run clean && rm -rf node_modules apps/*/node_modules packages/*/node_modules"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.0.0"
+  }
+}

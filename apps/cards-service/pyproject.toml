@@ -1,0 +1,20 @@
+[project]
+name = "mrun-cards-service"
+version = "1.0.0"
+description = "MRUN cards service (FastAPI)"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi",
+  "uvicorn",
+  "httpx",
+  "pydantic",
+  "pydantic-settings",
+  "python-consul",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.mypy]
+python_version = "3.12"
+strict = true

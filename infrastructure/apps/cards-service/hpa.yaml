@@ -3,6 +3,7 @@ kind: HorizontalPodAutoscaler
 
 metadata:
   name: cards-service
+  namespace: mrun-apps
 
 spec:
 

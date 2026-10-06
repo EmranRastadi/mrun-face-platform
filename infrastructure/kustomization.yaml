@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - bootstrap/namespace/apps
+  - bootstrap/namespace/system
+  - bootstrap/namespace/security
+  - bootstrap/namespace/monitoring
+  - platform
+  - apps

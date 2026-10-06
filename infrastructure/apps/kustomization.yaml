@@ -5,3 +5,7 @@ resources:
   - api-gateway
   - cards-service
   - users-service
+  - enrollment-service
+  - audit-service
+  - notification-service
+  - analytics-service

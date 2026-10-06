@@ -1,0 +1,22 @@
+name: infra-validate
+
+on:
+  pull_request:
+    paths:
+      - 'infrastructure/**'
+      - 'skaffold.yaml'
+      - 'docker-compose.yml'
+
+jobs:
+  kustomize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          for d in infrastructure/apps infrastructure/platform infrastructure; do
+            if [ -f "$d/kustomization.yaml" ]; then
+              echo "=== $d ==="
+              kubectl kustomize "$d" > /dev/null || (echo "kustomize failed: $d" && exit 1)
+            fi
+          done
+      - run: docker compose config > /dev/null

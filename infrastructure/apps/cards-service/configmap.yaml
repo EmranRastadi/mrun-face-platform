@@ -42,7 +42,7 @@ data:
   # Kafka
   ####################################
 
-  KAFKA_BROKERS: kafka.mrun-system.svc.cluster.local:9092
+  KAFKA_BROKERS: kafka.mrun-messaging.svc.cluster.local:9092
 
   CARD_EVENTS_TOPIC: card.events
 

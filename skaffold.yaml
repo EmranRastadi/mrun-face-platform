@@ -15,7 +15,7 @@ build:
         dockerfile: Dockerfile
       sync:
         manual:
-          - src: "**/*.(ts|js)"
+          - src: "src/**/*.ts"
             dest: /app
 
     - image: mrun/users-service
@@ -24,7 +24,16 @@ build:
         dockerfile: Dockerfile
       sync:
         manual:
-          - src: "**/*.(ts|js)"
+          - src: "src/**/*.ts"
+            dest: /app
+
+    - image: mrun/identity-service
+      context: apps/identity-service
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "src/**/*.ts"
             dest: /app
 
     - image: mrun/cards-service
@@ -32,10 +41,51 @@ build:
       docker:
         dockerfile: Dockerfile
 
+    - image: mrun/camera-service
+      context: apps/camera-service
+      docker:
+        dockerfile: Dockerfile
+
+    - image: mrun/similarity-service
+      context: apps/similarity-service
+      docker:
+        dockerfile: Dockerfile
+
+    - image: mrun/worker-service
+      context: apps/worker-service
+      docker:
+        dockerfile: Dockerfile
+
+    - image: mrun/enrollment-service
+      context: apps/enrollment-service
+      docker:
+        dockerfile: Dockerfile
+
+    - image: mrun/audit-service
+      context: .
+      docker:
+        dockerfile: apps/audit-service/Dockerfile
+
+    - image: mrun/notification-service
+      context: .
+      docker:
+        dockerfile: apps/notification-service/Dockerfile
+
+    - image: mrun/analytics-service
+      context: .
+      docker:
+        dockerfile: apps/analytics-service/Dockerfile
+
 manifests:
   kustomize:
     paths:
+      - infrastructure/bootstrap/namespace
       - infrastructure/apps
+      - infrastructure/platform/external-services
+      - infrastructure/platform/databases/minio
+      - infrastructure/platform/databases/clickhouse
+      - infrastructure/platform/databases/dragonflydb
+      - infrastructure/platform/databases/milvus
 
 deploy:
   kubectl: {}

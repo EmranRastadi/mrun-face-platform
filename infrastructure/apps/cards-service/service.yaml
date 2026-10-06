@@ -2,10 +2,11 @@ apiVersion: v1
 kind: Service
 metadata:
   name: cards-service
+  namespace: mrun-apps
 
 spec:
   selector:
-    app: cards-service
+    app.kubernetes.io/name: cards-service
 
   ports:
     - name: http

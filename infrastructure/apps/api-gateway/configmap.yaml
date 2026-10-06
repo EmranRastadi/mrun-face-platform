@@ -8,18 +8,22 @@ metadata:
 data:
   NODE_ENV: "production"
   SERVICE_NAME: "api-gateway"
-  PORT: "80"
+  PORT: "3000"
 
   LOG_LEVEL: "info"
 
   CONSUL_HOST: "consul.mrun-system.svc.cluster.local"
   CONSUL_PORT: "8500"
 
-  KAFKA_BROKERS: "kafka.mrun-system.svc.cluster.local:9092"
+  KAFKA_BROKERS: "kafka.mrun-messaging.svc.cluster.local:9092"
 
   KEYCLOAK_URL: "http://keycloak.mrun-security.svc.cluster.local:8080"
 
   USERS_SERVICE_URL: "http://users-service:3000"
   ORDERS_SERVICE_URL: "http://orders-service:3000"
+  ENROLLMENT_SERVICE_URL: "http://enrollment-service.mrun-apps.svc.cluster.local:8001"
+  AUDIT_SERVICE_URL: "http://audit-service.mrun-apps.svc.cluster.local:3003"
+  NOTIFICATION_SERVICE_URL: "http://notification-service.mrun-apps.svc.cluster.local:3004"
+  ANALYTICS_SERVICE_URL: "http://analytics-service.mrun-apps.svc.cluster.local:3005"
 
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo.mrun-monitoring.svc.cluster.local:4318"

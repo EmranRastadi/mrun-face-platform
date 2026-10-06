@@ -1,0 +1,23 @@
+{
+  "name": "@mrun/events",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint \"**/*.ts\"",
+    "test": "echo \"no tests yet\"",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "globals": "^15.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0",
+    "typescript-eslint": "8.71.0"
+  }
+}

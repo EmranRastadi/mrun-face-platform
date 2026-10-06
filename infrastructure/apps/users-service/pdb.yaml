@@ -3,6 +3,7 @@ kind: PodDisruptionBudget
 
 metadata:
   name: users-service
+  namespace: mrun-apps
 
 spec:
 
@@ -11,4 +12,4 @@ spec:
   selector:
 
     matchLabels:
-      app: users-service
+      app.kubernetes.io/name: users-service

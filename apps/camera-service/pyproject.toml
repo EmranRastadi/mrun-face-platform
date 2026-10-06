@@ -1,0 +1,14 @@
+[project]
+name = "mrun-camera-service"
+version = "0.1.0"
+description = "MRUN camera ingest service (FastAPI) — scaffold"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi",
+  "uvicorn",
+  "pydantic",
+  "pydantic-settings",
+]
+
+[tool.ruff]
+line-length = 100

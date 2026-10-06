@@ -3,13 +3,14 @@ kind: NetworkPolicy
 
 metadata:
   name: users-service
+  namespace: mrun-apps
 
 spec:
 
   podSelector:
 
     matchLabels:
-      app: users-service
+      app.kubernetes.io/name: users-service
 
   policyTypes:
     - Ingress

@@ -1,0 +1,7 @@
+version: v1
+plugins:
+  - plugin: buf.build/protocolbuffers/js
+    out: gen/ts
+    opt: target=ts
+  - plugin: buf.build/protocolbuffers/python
+    out: gen/python

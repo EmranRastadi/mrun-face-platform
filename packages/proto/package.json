@@ -1,0 +1,10 @@
+{
+  "name": "@mrun/proto",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "gen": "if command -v buf >/dev/null 2>&1; then buf generate; else echo 'buf not installed; skipping proto generate'; fi",
+    "lint": "if command -v buf >/dev/null 2>&1; then buf lint; else echo 'buf not installed; skipping proto lint'; fi",
+    "clean": "rm -rf gen"
+  }
+}

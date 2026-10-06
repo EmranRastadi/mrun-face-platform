@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: milvus
+  namespace: mrun-system
+  labels:
+    app.kubernetes.io/name: milvus
+    app.kubernetes.io/part-of: mrun-platform
+    app.kubernetes.io/component: vector-db
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: milvus
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: milvus
+        app.kubernetes.io/part-of: mrun-platform
+        app.kubernetes.io/component: vector-db
+    spec:
+      containers:
+        - name: milvus
+          image: milvusdb/milvus:v2.4.15
+          command: ["milvus", "run", "standalone"]
+          ports:
+            - name: grpc
+              containerPort: 19530
+            - name: metrics
+              containerPort: 9091
+          envFrom:
+            - configMapRef:
+                name: milvus-config
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/milvus
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: "2"
+              memory: 4Gi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 9091
+            periodSeconds: 10
+            failureThreshold: 30
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: milvus-data

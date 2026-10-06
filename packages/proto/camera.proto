@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package mrun.camera.v1;
+
+service CameraService {
+  rpc GetFrame(GetFrameRequest) returns (GetFrameResponse);
+}
+
+message GetFrameRequest {
+  string camera_id = 1;
+}
+
+message GetFrameResponse {
+  string camera_id = 1;
+  bytes jpeg = 2;
+  int64 captured_at_ms = 3;
+}

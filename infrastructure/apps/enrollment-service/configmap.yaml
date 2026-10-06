@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: enrollment-service-config
+  namespace: mrun-apps
+
+data:
+  ENVIRONMENT: "production"
+  PORT: "8001"
+  LOG_LEVEL: "INFO"
+
+  CONSUL_HOST: "consul.mrun-system.svc.cluster.local"
+  CONSUL_PORT: "8500"
+
+  KAFKA_BROKERS: "kafka.mrun-messaging.svc.cluster.local:9092"
+  KAFKA_ENABLED: "true"
+
+  #######################  START POSTGRES ##########################
+  DB_HOST: "enrollment-db-rw.mrun-database.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_USER: "enrollment"
+  DB_NAME: "enrollment"
+  #######################  END POSTGRES ##########################
+
+  #######################  START MINIO ##########################
+  MINIO_ENDPOINT: "minio.mrun-system.svc.cluster.local:9000"
+  MINIO_BUCKET: "enroll"
+  MINIO_SECURE: "false"
+  #######################  END MINIO ##########################
+
+  #######################  START MILVUS ##########################
+  MILVUS_HOST: "milvus.mrun-system.svc.cluster.local"
+  MILVUS_PORT: "19530"
+  MILVUS_COLLECTION: "face_embeddings"
+  MILVUS_DIMENSION: "512"
+  #######################  END MILVUS ##########################

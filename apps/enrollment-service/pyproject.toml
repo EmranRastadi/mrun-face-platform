@@ -1,0 +1,25 @@
+[project]
+name = "mrun-enrollment-service"
+version = "1.0.0"
+description = "MRUN enrollment service: person/face enrollment (MinIO + Milvus + Postgres + Kafka)"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi",
+  "uvicorn[standard]",
+  "httpx",
+  "pydantic",
+  "pydantic-settings",
+  "python-consul",
+  "boto3",
+  "pymilvus",
+  "psycopg[binary]",
+  "kafka-python",
+  "python-multipart",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true

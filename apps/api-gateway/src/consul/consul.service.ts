@@ -31,7 +31,7 @@ export class ConsulService {
   async get(key: string): Promise<string | undefined> {
     try {
       const { data } = await firstValueFrom(
-        this.http.get(`${this.baseUrl}/v1/kv/${key}`),
+        this.http.get<Array<{ Value: string }>>(`${this.baseUrl}/v1/kv/${key}`),
       );
 
       if (!data?.length) {

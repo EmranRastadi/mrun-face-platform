@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: notification-service
+  namespace: mrun-apps
+  labels:
+    app.kubernetes.io/name: notification-service
+    app.kubernetes.io/part-of: mrun-platform
+    app.kubernetes.io/component: notification
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: notification-service
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: notification-service
+        app.kubernetes.io/part-of: mrun-platform
+        app.kubernetes.io/component: notification
+    spec:
+      serviceAccountName: notification-service
+
+      securityContext:
+        fsGroup: 1000
+
+      containers:
+        - name: notification-service
+          image: mrun/notification-service
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 3004
+
+          envFrom:
+            - configMapRef:
+                name: notification-service-config
+            - secretRef:
+                name: notification-service-secret
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3004
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3004
+            periodSeconds: 10

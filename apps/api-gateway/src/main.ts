@@ -1,15 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ConsulService } from './consul';
 import * as winston from 'winston';
 import { WinstonModule } from 'nest-winston';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import {
-  DocumentBuilder,
-  SwaggerModule,
-} from '@nestjs/swagger';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const logger = WinstonModule.createLogger({
@@ -54,10 +50,7 @@ async function bootstrap() {
     )
     .build();
 
-  const swaggerDocument = SwaggerModule.createDocument(
-    app,
-    swaggerConfig,
-  );
+  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
 
   SwaggerModule.setup('api', app, swaggerDocument);
 
@@ -74,28 +67,18 @@ async function bootstrap() {
   // Start server
   await app.listen(port, '0.0.0.0');
 
-  await axios.get(`${userService}/users`);
+  try {
+    await axios.get(`${userService}/users`);
+  } catch (error) {
+    logger.warn(
+      `Users service not reachable at ${userService}/users`,
+      error instanceof Error ? error.message : String(error),
+    );
+  }
 
-// Register in Consul
-const consulService = app.get(ConsulService);
+  logger.log(`🚀 Gateway Service is running on: http://localhost:${port}`);
 
-try {
-  await consulService.registerService();
-  logger.log('Registered with Consul');
-} catch (error) {
-  logger.error(
-      'Failed to register with Consul',
-      error instanceof Error ? error.stack : String(error),
-  );
+  logger.log(`📘 Swagger: http://localhost:${port}/api`);
 }
 
-logger.log(
-    `🚀 Gateway Service is running on: http://localhost:${port}`,
-);
-
-logger.log(
-    `📘 Swagger: http://localhost:${port}/api`,
-);
-}
-
-bootstrap();
+void bootstrap();

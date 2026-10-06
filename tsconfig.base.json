@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "node16",
+    "moduleResolution": "node16",
+    "resolvePackageJsonExports": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": false,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
+    "baseUrl": ".",
+    "paths": {
+      "@mrun/common": ["packages/common/src"],
+      "@mrun/common/*": ["packages/common/src/*"],
+      "@mrun/ddd": ["packages/DDD/src"],
+      "@mrun/ddd/*": ["packages/DDD/src/*"],
+      "@mrun/events": ["packages/events/src"],
+      "@mrun/events/*": ["packages/events/src/*"],
+      "@mrun/proto": ["packages/proto/gen/ts"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "apps/*/dist", "apps/*/node_modules", "**/*.spec.ts", "apps/*/test"]
+}

@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: enrollment-service
+  namespace: mrun-apps
+  labels:
+    app.kubernetes.io/name: enrollment-service
+    app.kubernetes.io/part-of: mrun-platform
+    app.kubernetes.io/component: enrollment
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: enrollment-service
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: enrollment-service
+        app.kubernetes.io/part-of: mrun-platform
+        app.kubernetes.io/component: enrollment
+    spec:
+      serviceAccountName: enrollment-service
+
+      securityContext:
+        fsGroup: 1000
+
+      containers:
+        - name: enrollment-service
+          image: mrun/enrollment-service
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 8001
+
+          envFrom:
+            - configMapRef:
+                name: enrollment-service-config
+            - secretRef:
+                name: enrollment-service-secret
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            periodSeconds: 10

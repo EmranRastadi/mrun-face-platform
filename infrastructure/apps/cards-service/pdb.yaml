@@ -3,6 +3,7 @@ kind: PodDisruptionBudget
 
 metadata:
   name: cards-service
+  namespace: mrun-apps
 
 spec:
 
@@ -11,4 +12,4 @@ spec:
   selector:
 
     matchLabels:
-      app: cards-service
+      app.kubernetes.io/name: cards-service

@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package mrun.similarity.v1;
+
+service SimilarityService {
+  rpc Search(SearchRequest) returns (SearchResponse);
+}
+
+message SearchRequest {
+  repeated float embedding = 1;
+  int32 top_k = 2;
+}
+
+message SearchResponse {
+  repeated Match matches = 1;
+}
+
+message Match {
+  string id = 1;
+  float score = 2;
+}

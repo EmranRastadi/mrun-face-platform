@@ -1,0 +1,13 @@
+[project]
+name = "mrun-worker-service"
+version = "0.1.0"
+description = "MRUN background worker (Kafka consumer) — scaffold"
+requires-python = ">=3.12"
+dependencies = [
+  "pydantic",
+  "pydantic-settings",
+  "kafka-python",
+]
+
+[tool.ruff]
+line-length = 100

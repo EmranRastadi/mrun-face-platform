@@ -4,6 +4,7 @@ import { PlatformConfigModule } from './consul';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users-service/users.module';
+import { ProxyModule } from './proxy/proxy.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { UsersModule } from './users-service/users.module';
       expandVariables: true,
     }),
     UsersModule,
+    ProxyModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -5,5 +5,4 @@ export interface CameraOnlinePayload {
   locationId: string;
 }
 
-export type CameraOnlineEvent =
-  BaseEvent<CameraOnlinePayload>;
+export type CameraOnlineEvent = BaseEvent<CameraOnlinePayload>;

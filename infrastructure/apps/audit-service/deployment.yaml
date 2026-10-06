@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: audit-service
+  namespace: mrun-apps
+  labels:
+    app.kubernetes.io/name: audit-service
+    app.kubernetes.io/part-of: mrun-platform
+    app.kubernetes.io/component: audit
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: audit-service
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: audit-service
+        app.kubernetes.io/part-of: mrun-platform
+        app.kubernetes.io/component: audit
+    spec:
+      serviceAccountName: audit-service
+
+      securityContext:
+        fsGroup: 1000
+
+      containers:
+        - name: audit-service
+          image: mrun/audit-service
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 3003
+
+          envFrom:
+            - configMapRef:
+                name: audit-service-config
+            - secretRef:
+                name: audit-service-secret
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3003
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3003
+            periodSeconds: 10
