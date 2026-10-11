@@ -1,9 +1,10 @@
 from fastapi import FastAPI, HTTPException
+import os
 import time
 import httpx
 from contextlib import asynccontextmanager
 from typing import List
-from datetime import datetime
+from datetime import datetime, timezone
 
 from .config import settings
 from .models import ServiceInfo, HealthStatus, ServiceResponse, Card
@@ -61,7 +62,7 @@ async def root():
 @app.get("/health")
 async def health_check():
     uptime = time.time() - START_TIME
-    print("hi Emran")
+    logger.debug("health check")
     return HealthStatus(
         service=settings.service_name,
         status="healthy",
@@ -119,17 +120,29 @@ async def get_service(service_name: str):
 
 @app.get("/call/{service_name}")
 async def call_service(service_name: str, path: str = ""):
-    """فراخوانی یک سرویس دیگر از طریق Consul"""
+    """Call another service via Consul discovery.
+
+    Restricted to an explicit allowlist to avoid turning the
+    service into an open proxy (SSRF). Path is sanitized to a
+    relative path only.
+    """
+    allowed = {"mrun-users", "mrun-cards", "mrun-enrollment", "users-service", "cards-service", "enrollment-service"}
+    if service_name not in allowed:
+        raise HTTPException(status_code=403, detail=f"Service '{service_name}' is not in the allowlist")
     if not settings.consul_enabled:
         raise HTTPException(status_code=503, detail="Consul is disabled")
-    
+
     service = consul_client.get_service(service_name)
     if not service:
         raise HTTPException(status_code=404, detail=f"Service '{service_name}' not found")
-    
+
     address = service.get("Address", service_name)
     port = service.get("Port", 80)
-    url = f"http://{address}:{port}/{path}" if path else f"http://{address}:{port}"
+    # Sanitize path: relative only, strip leading slashes and scheme attempts.
+    safe_path = path.lstrip("/").replace("..", "").strip()
+    if "://" in safe_path:
+        raise HTTPException(status_code=400, detail="Invalid path")
+    url = f"http://{address}:{port}/{safe_path}" if safe_path else f"http://{address}:{port}"
     
     try:
         async with httpx.AsyncClient() as client:
@@ -149,22 +162,24 @@ async def call_service(service_name: str, path: str = ""):
         raise HTTPException(status_code=500, detail=f"Error calling {service_name}: {str(e)}")
 
 # ==================== CRUD Cards ====================
-
+# NOTE: in-memory store is dev-only. Production must use Postgres
+# (per-service database) + migrations. Data is lost on restart.
 cards_db: List[Card] = []
 next_id = 1
 
-@app.post("/cards")
+@app.post("/cards", status_code=201)
 async def create_card(card: Card):
     global next_id
     card.id = next_id
-    card.created_at = datetime.utcnow()
-    card.updated_at = datetime.utcnow()
+    now = datetime.now(timezone.utc)
+    card.created_at = now
+    card.updated_at = now
     cards_db.append(card)
     next_id += 1
     return ServiceResponse(
         success=True,
         message="Card created",
-        data=card.dict(),
+        data=card.model_dump(mode="json"),
         service=settings.service_name,
         version=settings.service_version
     )
@@ -174,7 +189,7 @@ async def get_cards():
     return ServiceResponse(
         success=True,
         message="All cards",
-        data={"cards": [c.dict() for c in cards_db]},
+        data={"cards": [c.model_dump(mode="json") for c in cards_db]},
         service=settings.service_name,
         version=settings.service_version
     )
@@ -186,7 +201,7 @@ async def get_card(card_id: int):
             return ServiceResponse(
                 success=True,
                 message=f"Card {card_id}",
-                data=card.dict(),
+                data=card.model_dump(mode="json"),
                 service=settings.service_name,
                 version=settings.service_version
             )

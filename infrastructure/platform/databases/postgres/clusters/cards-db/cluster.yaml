@@ -17,7 +17,7 @@ spec:
       database: cards
       owner: cards
       secret:
-        name: users-db-app
+        name: cards-db-app
 
   resources:
     requests:

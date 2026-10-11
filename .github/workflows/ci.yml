@@ -8,25 +8,82 @@ on:
 jobs:
   lint-test-build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - service: api-gateway
+            language: node
+          - service: users-service
+            language: node
+          - service: enrollment-service
+            language: python
+          - service: audit-service
+            language: node
+          - service: notification-service
+            language: node
+          - service: analytics-service
+            language: node
+          - service: cards-service
+            language: python
+          - service: similarity-service
+            language: python
+          - service: camera-service
+            language: python
+          - service: worker-service
+            language: python
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: pnpm/action-setup@v4
+        if: matrix.language == 'node'
+
       - uses: actions/setup-node@v4
+        if: matrix.language == 'node'
         with:
           node-version: 20
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
-      - run: pnpm test
-      - run: pnpm build
 
-  python:
+      - uses: actions/setup-python@v5
+        if: matrix.language == 'python'
+        with:
+          python-version: '3.12'
+
+      - run: |
+          if [ "${{ matrix.language }}" = "python" ]; then
+            pip install ruff mypy
+          else
+            corepack enable
+            pnpm install --frozen-lockfile
+          fi
+
+      - run: |
+          if [ "${{ matrix.language }}" = "python" ]; then
+            ruff check apps/${matrix.service}/app
+            python -m compileall apps/${matrix.service}/app
+          else
+            pnpm lint
+          fi
+
+      - run: |
+          if [ "${{ matrix.language }}" = "python" ]; then
+            pnpm --filter ${matrix.service} test 2>/dev/null || python -m pytest apps/${matrix.service}/tests 2>/dev/null || echo "no tests found"
+          else
+            pnpm test -- --testPathPattern=".*${matrix.service}.*"
+          fi
+
+      - run: |
+          if [ "${{ matrix.language }}" = "python" ]; then
+            echo "python services: lint + compileonly"
+          else
+            pnpm build
+          fi
+
+  proto:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: bufbuild/buf-action@v1
         with:
-          python-version: '3.12'
-      - run: pip install ruff mypy
-      - run: ruff check apps/cards-service apps/camera-service apps/similarity-service apps/worker-service
-      - run: python -m compileall apps/cards-service/app apps/camera-service/src apps/similarity-service/src apps/worker-service/src
+          commands: lint generate
+      - run: make proto

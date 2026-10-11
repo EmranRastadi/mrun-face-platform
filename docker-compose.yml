@@ -34,6 +34,7 @@ services:
 
   dragonfly:
     image: docker.dragonflydb.io/dragonflydb/dragonfly:latest
+    profiles: ["cache"]
     container_name: mrun-dragonfly
     ulimits:
       memlock: -1
@@ -47,6 +48,7 @@ services:
 
   minio:
     image: minio/minio:latest
+    profiles: ["blob"]
     container_name: mrun-minio
     command: server /data --console-address ":9001"
     environment:
@@ -66,8 +68,11 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # etcd is only needed by the Milvus vector stack (profile: vector).
+  # Default is a Docker-Hub mirror of etcd via the local Nexus (quay.io is blocked here).
   etcd:
-    image: quay.io/coreos/etcd:v3.5.5
+    image: bitnamilegacy/etcd:3.5
+    profiles: ["vector"]
     container_name: mrun-etcd
     environment:
       - ETCD_AUTO_COMPACTION_MODE=revision
@@ -83,6 +88,7 @@ services:
 
   milvus:
     image: milvusdb/milvus:v2.4.15
+    profiles: ["vector"]
     container_name: mrun-milvus
     command: ["milvus", "run", "standalone"]
     environment:
@@ -96,8 +102,11 @@ services:
     volumes:
       - milvus_data:/var/lib/milvus
     depends_on:
-      - etcd
-      - minio
+      etcd:
+        condition: service_started
+      minio:
+        condition: service_started
+        required: false
     networks:
       - mrun-network
     restart: unless-stopped
@@ -122,6 +131,7 @@ services:
 
   consul:
     image: hashicorp/consul:latest
+    profiles: ["discovery"]
     container_name: mrun-consul
     ports:
       - "8500:8500"
@@ -195,6 +205,7 @@ services:
         condition: service_healthy
       consul:
         condition: service_started
+        required: false
       kafka:
         condition: service_started
     networks:
@@ -262,8 +273,10 @@ services:
         condition: service_healthy
       minio:
         condition: service_started
+        required: false
       milvus:
         condition: service_started
+        required: false
       kafka:
         condition: service_started
     networks:
@@ -306,10 +319,13 @@ services:
       <<: *common-env
       KAFKA_ENABLED: "true"
       DRAGONFLY_HOST: dragonfly
-      DRAGONFLY_ENABLED: "true"
+      DRAGONFLY_ENABLED: ${DRAGONFLY_ENABLED:-false}
     depends_on:
-      - kafka
-      - dragonfly
+      kafka:
+        condition: service_started
+      dragonfly:
+        condition: service_started
+        required: false
     networks:
       - mrun-network
     restart: unless-stopped

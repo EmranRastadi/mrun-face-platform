@@ -13,28 +13,16 @@ build:
       context: apps/api-gateway
       docker:
         dockerfile: Dockerfile
-      sync:
-        manual:
-          - src: "src/**/*.ts"
-            dest: /app
 
     - image: mrun/users-service
       context: apps/users-service
       docker:
         dockerfile: Dockerfile
-      sync:
-        manual:
-          - src: "src/**/*.ts"
-            dest: /app
 
     - image: mrun/identity-service
       context: apps/identity-service
       docker:
         dockerfile: Dockerfile
-      sync:
-        manual:
-          - src: "src/**/*.ts"
-            dest: /app
 
     - image: mrun/cards-service
       context: apps/cards-service
@@ -86,6 +74,18 @@ manifests:
       - infrastructure/platform/databases/clickhouse
       - infrastructure/platform/databases/dragonflydb
       - infrastructure/platform/databases/milvus
+      - infrastructure/platform/databases/postgres
+      - infrastructure/platform/discovery
+      - infrastructure/platform/monitoring
+      - infrastructure/platform/networking
+      - infrastructure/platform/identity
 
 deploy:
   kubectl: {}
+
+profiles:
+  - name: prod
+    manifests:
+      kustomize:
+        paths:
+          - infrastructure

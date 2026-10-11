@@ -50,6 +50,15 @@ Endpoints: gateway `:3000`, users `:3001`, cards `:8000`, enrollment `:8001`, au
 notification `:3004`, analytics `:3005`, Kafka UI `:8080`, MinIO console `:9001`, ClickHouse `:8123`,
 Consul UI `:8500`.
 
+The Milvus/etcd vector stack is opt-in (profile `vector`) and not started by a plain `up`:
+
+```bash
+docker compose --profile vector up -d   # or: make up-vector
+```
+
+`enrollment-service` starts without Milvus (its Milvus dependency is optional; vector search is
+unavailable until the `vector` profile is up).
+
 Stop / reset:
 
 ```bash
@@ -131,6 +140,14 @@ pnpm build && pnpm lint && pnpm test
 
 - **`manifest for bitnami/kafka:3.7 not found`** — Bitnami removed its free Docker Hub catalog. This
   repo uses the official `apache/kafka:3.9.0` image; pull the latest `docker-compose.yml`.
+- **`Get "https://quay.io/v2/": ... timeout` (etcd pull fails)** — `quay.io` is unreachable from your
+  network. A plain `docker compose up -d` no longer touches it (etcd/Milvus are behind the `vector`
+  profile). To run the vector stack anyway, point etcd at a Docker-Hub mirror:
+  `ETCD_IMAGE=bitnamilegacy/etcd:3.5 docker compose --profile vector up -d`.
+- **One failed pull aborts the rest** — Compose pulls in parallel and cancels the others on the first
+  error (`Interrupted` / `No such image` for images that are actually fine). Fix the failing image,
+  then re-run `up -d`; or pull services one by one, e.g.
+  `docker compose pull postgres kafka && docker compose up -d`.
 - **BLOB/vector errors on enrollment** — ensure `minio`, `etcd`, and `milvus` are up before
   `enrollment-service`.
 - **Kafka clients can't connect** — the broker advertises `kafka:9092`; run clients on the

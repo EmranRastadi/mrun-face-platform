@@ -25,8 +25,12 @@ clean:
 	pnpm clean
 
 # Local infra (Postgres/Kafka/Consul/...) — see docker-compose.yml
+# Default `up` starts the core stack (Milvus/etcd are opt-in via the `vector` profile).
 up:
 	docker compose up -d
+
+up-vector:
+	docker compose --profile vector up -d
 
 down:
 	docker compose down -v

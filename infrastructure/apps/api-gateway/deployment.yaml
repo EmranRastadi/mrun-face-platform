@@ -10,7 +10,7 @@ metadata:
     app.kubernetes.io/component: gateway
 
 spec:
-  replicas: 1
+  replicas: 2
 
   strategy:
     type: RollingUpdate
@@ -68,26 +68,21 @@ spec:
               cpu: 500m
               memory: 512Mi
 
-#          startupProbe:
-#
-#            httpGet:
-#              path: /health
-#              port: 3000
-#
-#            periodSeconds: 5
-#            failureThreshold: 30
-#
-#          readinessProbe:
-#
-#            httpGet:
-#              path: /health
-#              port: 3000
-#
-#            periodSeconds: 5
-#
-#          livenessProbe:
-#            httpGet:
-#              path: /health
-#              port: 3000
-#
-#            periodSeconds: 10
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            periodSeconds: 5
+            failureThreshold: 30
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            periodSeconds: 10
