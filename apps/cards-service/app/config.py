@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     service_name: str = "mrun-cards"
     service_version: str = "1.0.0"
     environment: str = "development"
+    port: int = 8000
 
     consul_enabled: bool = False
     consul_host: str = "localhost"

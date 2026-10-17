@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
+import { ConsulInstance } from './interfaces';
 
 @Injectable()
 export class ConsulService {
@@ -26,6 +27,12 @@ export class ConsulService {
 
   private get podIp(): string {
     return this.config.get<string>('POD_IP', '127.0.0.1');
+  }
+
+  // Unique per instance so a terminating pod's deregistration cannot remove a
+  // sibling/newer pod that shares the same service name.
+  private get serviceId(): string {
+    return `${this.serviceName}-${this.podIp}`;
   }
 
   async get(key: string): Promise<string | undefined> {
@@ -64,7 +71,7 @@ export class ConsulService {
       });
       await firstValueFrom(
         this.http.put(`${this.baseUrl}/v1/agent/service/register`, {
-          ID: this.serviceName,
+          ID: this.serviceId,
           Name: this.serviceName,
           Address: this.podIp,
           Port: this.servicePort,
@@ -72,6 +79,8 @@ export class ConsulService {
             HTTP: `http://${this.podIp}:${this.servicePort}/health`,
             Interval: '10s',
             Timeout: '5s',
+            // Auto-remove stale instances (killed pods that never deregistered).
+            DeregisterCriticalServiceAfter: '5m',
           },
         }),
       );
@@ -87,13 +96,33 @@ export class ConsulService {
     try {
       await firstValueFrom(
         this.http.put(
-          `${this.baseUrl}/v1/agent/service/deregister/${this.serviceName}`,
+          `${this.baseUrl}/v1/agent/service/deregister/${this.serviceId}`,
         ),
       );
 
-      this.logger.log(`Deregistered service "${this.serviceName}" from Consul`);
+      this.logger.log(`Deregistered service "${this.serviceId}" from Consul`);
     } catch (error) {
       this.logger.error('Failed to deregister service from Consul', error);
+    }
+  }
+
+  // Resolve a healthy instance of a service from the Consul catalog.
+  // Returns undefined when the service is unknown/unhealthy or Consul is down.
+  async resolve(serviceName: string): Promise<ConsulInstance | undefined> {
+    try {
+      const { data } = await firstValueFrom(
+        this.http.get<Array<{ Service: ConsulInstance }>>(
+          `${this.baseUrl}/v1/health/service/${serviceName}?passing=true`,
+        ),
+      );
+
+      return data?.length ? data[0].Service : undefined;
+    } catch (error) {
+      this.logger.error(
+        `Failed to resolve "${serviceName}" from Consul`,
+        error,
+      );
+      return undefined;
     }
   }
 }

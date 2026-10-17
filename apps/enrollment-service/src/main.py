@@ -33,15 +33,19 @@ START_TIME = time.time()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting %s", settings.service_name)
+    service_id = None
     if settings.consul_enabled:
-        pod_name = os.getenv("HOSTNAME", "local")
+        address = os.getenv("POD_IP") or os.getenv("HOSTNAME", "local")
+        service_id = f"{settings.service_name}-{address}"
         consul_client.register_service(
             name=settings.service_name,
-            service_id=f"{settings.service_name}-{pod_name}",
-            address=pod_name,
+            service_id=service_id,
+            address=address,
             port=settings.port,
         )
     yield
+    if settings.consul_enabled and service_id:
+        consul_client.deregister_service(service_id)
     event_publisher.close()
     logger.info("Stopping %s", settings.service_name)
 

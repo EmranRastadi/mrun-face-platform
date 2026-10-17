@@ -3,6 +3,13 @@ export interface ConsulConfig {
   port: number;
 }
 
+export interface ConsulInstance {
+  ID: string;
+  Service: string;
+  Address: string;
+  Port: number;
+}
+
 export interface RegisterServiceDto {
   ID: string;
   Name: string;

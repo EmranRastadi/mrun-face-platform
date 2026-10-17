@@ -6,6 +6,6 @@ metadata:
 data:
   example-dashboard.json: |
     {
-      "title": "Example Dashboard",
+      "title": "MRNU Services Dashboard",
       "panels": []
     }

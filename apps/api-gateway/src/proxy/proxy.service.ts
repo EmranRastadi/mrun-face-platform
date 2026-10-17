@@ -2,10 +2,15 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import type { Request, Response } from 'express';
+import { ConsulService } from '../consul';
 
 /**
- * Generic reverse proxy: forwards an incoming request to a backend service
- * resolved from an environment variable (e.g. ENROLLMENT_SERVICE_URL).
+ * Generic reverse proxy: forwards an incoming request to a backend service.
+ *
+ * Target resolution:
+ * 1. If CONSUL_ENABLED=true and the service is registered & healthy in Consul,
+ *    the address is resolved dynamically from the Consul catalog.
+ * 2. Otherwise it falls back to the static *_SERVICE_URL env variable.
  *
  * Best-practice hardening:
  * - allowlist of env keys (no arbitrary SSRF target)
@@ -22,18 +27,57 @@ const ALLOWED_PROXY_TARGETS = new Set([
   'ANALYTICS_SERVICE_URL',
   'IDENTITY_SERVICE_URL',
 ]);
+
+// Maps a proxy env key to the service name registered in Consul.
+const TARGET_SERVICE_NAME: Record<string, string> = {
+  USERS_SERVICE_URL: 'users-service',
+  ENROLLMENT_SERVICE_URL: 'enrollment-service',
+  CARDS_SERVICE_URL: 'mrun-cards',
+  AUDIT_SERVICE_URL: 'audit-service',
+  NOTIFICATION_SERVICE_URL: 'notification-service',
+  ANALYTICS_SERVICE_URL: 'analytics-service',
+  IDENTITY_SERVICE_URL: 'identity-service',
+};
+
 @Injectable()
 export class ProxyService {
   private readonly logger = new Logger(ProxyService.name);
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly consul: ConsulService,
+  ) {}
+
+  private get consulEnabled(): boolean {
+    return this.config.get<string>('CONSUL_ENABLED', 'false') === 'true';
+  }
+
+  // Resolve the upstream base URL, preferring Consul discovery over static env.
+  private async resolveBaseUrl(envKey: string): Promise<string | undefined> {
+    const staticUrl = this.config.get<string>(envKey);
+
+    if (this.consulEnabled) {
+      const serviceName = TARGET_SERVICE_NAME[envKey];
+      if (serviceName) {
+        const instance = await this.consul.resolve(serviceName);
+        if (instance?.Address && instance?.Port) {
+          return `http://${instance.Address}:${instance.Port}`;
+        }
+        this.logger.warn(
+          `Consul could not resolve "${serviceName}"; falling back to ${envKey}`,
+        );
+      }
+    }
+
+    return staticUrl;
+  }
 
   async forward(envKey: string, req: Request, res: Response): Promise<void> {
     if (!ALLOWED_PROXY_TARGETS.has(envKey)) {
       res.status(403).json({ error: `proxy target not allowed` });
       return;
     }
-    const baseUrl = this.config.get<string>(envKey);
+    const baseUrl = await this.resolveBaseUrl(envKey);
     if (!baseUrl) {
       res.status(503).json({ error: `${envKey} is not configured` });
       return;

@@ -10,10 +10,13 @@ data:
 
   PORT: "3000"
 
+  SERVICE_NAME: "users-service"
+
   LOG_LEVEL: "info"
 
   CONSUL_HOST: "consul.mrun-system.svc.cluster.local"
   CONSUL_PORT: "8500"
+  CONSUL_ENABLED: "true"
 
   KAFKA_BROKERS: "kafka.mrun-messaging.svc.cluster.local:9092"
   KAFKA_CLIENT_ID: "user-service"

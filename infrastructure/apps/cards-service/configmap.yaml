@@ -52,6 +52,8 @@ data:
 
   CONSUL_HOST: consul.mrun-system.svc.cluster.local
   CONSUL_PORT: "8500"
+  CONSUL_ENABLED: "true"
+  SERVICE_NAME: "mrun-cards"
 
   ####################################
   # Internal Services

@@ -20,18 +20,24 @@ async def lifespan(app: FastAPI):
 
     logger.info(f"Starting {settings.service_name}")
 
+    service_id = None
+
     if settings.consul_enabled:
 
-        pod_name = os.getenv("HOSTNAME")
+        address = os.getenv("POD_IP") or os.getenv("HOSTNAME", "127.0.0.1")
+        service_id = f"{settings.service_name}-{address}"
 
         consul_client.register_service(
             name=settings.service_name,
-            service_id=f"{settings.service_name}-{pod_name}",
-            address=pod_name,
-            port=8000
+            service_id=service_id,
+            address=address,
+            port=settings.port
         )
 
     yield
+
+    if settings.consul_enabled and service_id:
+        consul_client.deregister_service(service_id)
 
     logger.info("Stopping service")
 

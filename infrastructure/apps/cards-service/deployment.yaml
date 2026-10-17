@@ -54,6 +54,12 @@ spec:
             - secretRef:
                 name: cards-service-secret
 
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+
           resources:
 
             requests:

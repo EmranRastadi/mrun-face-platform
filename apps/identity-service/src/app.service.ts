@@ -14,7 +14,8 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(AppService.name);
   private consumer?: Consumer;
   private producer?: Producer;
-  private readonly handlers: Array<{ topic: string; handler: MessageHandler }> = [];
+  private readonly handlers: Array<{ topic: string; handler: MessageHandler }> =
+    [];
   private readonly enabled: boolean;
 
   constructor(private readonly config: ConfigService) {

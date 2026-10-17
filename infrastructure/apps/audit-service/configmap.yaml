@@ -8,10 +8,12 @@ metadata:
 data:
   ENVIRONMENT: "production"
   PORT: "3003"
+  SERVICE_NAME: "audit-service"
   LOG_LEVEL: "INFO"
 
   CONSUL_HOST: "consul.mrun-system.svc.cluster.local"
   CONSUL_PORT: "8500"
+  CONSUL_ENABLED: "true"
 
   KAFKA_BROKERS: "kafka.mrun-messaging.svc.cluster.local:9092"
   KAFKA_CLIENT_ID: "audit-service"

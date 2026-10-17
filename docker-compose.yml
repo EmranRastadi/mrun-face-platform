@@ -7,6 +7,7 @@ x-common-env: &common-env
   LOG_LEVEL: INFO
   CONSUL_HOST: consul
   CONSUL_PORT: "8500"
+  CONSUL_ENABLED: "true"
   KAFKA_BROKERS: kafka:9092
 
 services:
@@ -135,13 +136,17 @@ services:
 
   consul:
     image: hashicorp/consul:latest
-    profiles: ["discovery"]
     container_name: mrun-consul
     ports:
       - "8500:8500"
     networks:
       - mrun-network
     command: agent -dev -client=0.0.0.0 -ui
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   kafka:

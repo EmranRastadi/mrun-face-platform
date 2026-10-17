@@ -8,6 +8,7 @@ metadata:
 data:
   ENVIRONMENT: "production"
   PORT: "3000"
+  SERVICE_NAME: "identity-service"
   LOG_LEVEL: "INFO"
 
   CONSUL_HOST: "consul.mrun-system.svc.cluster.local"

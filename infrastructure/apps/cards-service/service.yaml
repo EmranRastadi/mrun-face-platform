@@ -4,6 +4,14 @@ metadata:
   name: cards-service
   namespace: mrun-apps
 
+  labels:
+    app.kubernetes.io/name: cards-service
+    app.kubernetes.io/part-of: mrun-platform
+    app.kubernetes.io/component: cards
+  annotations:
+    consul.hashicorp.com/service-name: mrun-cards
+    consul.hashicorp.com/service-port: "8000"
+
 spec:
   selector:
     app.kubernetes.io/name: cards-service

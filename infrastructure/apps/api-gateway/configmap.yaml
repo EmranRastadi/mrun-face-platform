@@ -14,6 +14,7 @@ data:
 
   CONSUL_HOST: "consul.mrun-system.svc.cluster.local"
   CONSUL_PORT: "8500"
+  CONSUL_ENABLED: "true"
 
   KAFKA_BROKERS: "kafka.mrun-messaging.svc.cluster.local:9092"
 
