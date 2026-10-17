@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: similarity-service
+  namespace: mrun-apps
+  labels:
+    app.kubernetes.io/name: similarity-service
+    app.kubernetes.io/part-of: mrun-platform
+    app.kubernetes.io/component: similarity
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: similarity-service
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: similarity-service
+        app.kubernetes.io/part-of: mrun-platform
+        app.kubernetes.io/component: similarity
+    spec:
+      serviceAccountName: similarity-service
+
+      securityContext:
+        fsGroup: 1000
+
+      containers:
+        - name: similarity-service
+          image: mrun/similarity-service
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 8000
+
+          envFrom:
+            - configMapRef:
+                name: similarity-service-config
+            - secretRef:
+                name: similarity-service-secret
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 10

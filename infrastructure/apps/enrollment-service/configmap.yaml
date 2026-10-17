@@ -17,7 +17,7 @@ data:
   KAFKA_ENABLED: "true"
 
   #######################  START POSTGRES ##########################
-  DB_HOST: "enrollment-db-rw.mrun-database.svc.cluster.local"
+  DB_HOST: "postgresql.mrun-database.svc.cluster.local"
   DB_PORT: "5432"
   DB_USER: "enrollment"
   DB_NAME: "enrollment"

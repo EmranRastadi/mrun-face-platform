@@ -23,7 +23,7 @@ data:
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo.mrun-monitoring.svc.cluster.local:4318"
 
   #######################  START POSTGRES ##########################
-  DB_HOST: "users-db-rw.mrun-database.svc.cluster.local"
+  DB_HOST: "postgresql.mrun-database.svc.cluster.local"
   DB_PORT: "5432"
   DB_USER: "users"
   DB_NAME: "users"

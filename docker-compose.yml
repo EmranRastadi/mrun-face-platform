@@ -46,14 +46,18 @@ services:
       - mrun-network
     restart: unless-stopped
 
+  # MinIO official images were removed from all registries (Sept 2026); use the
+  # Chainguard build mirror which is a drop-in replacement (same entrypoint/env).
   minio:
-    image: minio/minio:latest
+    image: ifirestone/minio:latest
     profiles: ["blob"]
     container_name: mrun-minio
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
+      # mc needs a writable config dir (image runs as non-root uid 65532).
+      MC_CONFIG_DIR: /tmp/.mc
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -62,7 +66,7 @@ services:
     networks:
       - mrun-network
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD-SHELL", "mc alias set local http://localhost:9000 \"$$MINIO_ROOT_USER\" \"$$MINIO_ROOT_PASSWORD\" >/dev/null 2>&1 && mc ready local"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -145,13 +149,17 @@ services:
     container_name: mrun-kafka
     ports:
       - "9092:9092"
+      - "9094:9094"
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      # PLAINTEXT serves in-compose clients (docker DNS name "kafka").
+      # EXTERNAL serves Kubernetes pods via the host gateway IP; brokers
+      # must advertise that IP or clients get an unresolvable "kafka" redirect.
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://${KAFKA_EXTERNAL_HOST:-172.19.0.1}:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -186,169 +194,172 @@ services:
     restart: unless-stopped
 
   # ==================== Application services ====================
-  users-service:
-    build:
-      context: ./apps/users-service
-      dockerfile: Dockerfile
-    container_name: mrun-users
-    ports:
-      - "3001:3000"
-    env_file:
-      - path: ./apps/users-service/.env
-        required: false
-    environment:
-      <<: *common-env
-      DB_HOST: postgres
-      DB_NAME: users
-    depends_on:
-      postgres:
-        condition: service_healthy
-      consul:
-        condition: service_started
-        required: false
-      kafka:
-        condition: service_started
-    networks:
-      - mrun-network
-    restart: unless-stopped
-
-  api-gateway:
-    build:
-      context: ./apps/api-gateway
-      dockerfile: Dockerfile
-    container_name: mrun-gateway
-    ports:
-      - "3000:3000"
-    env_file:
-      - path: ./apps/api-gateway/.env
-        required: false
-    environment:
-      <<: *common-env
-    depends_on:
-      - users-service
-    networks:
-      - mrun-network
-    restart: unless-stopped
-
-  cards-service:
-    build:
-      context: ./apps/cards-service
-      dockerfile: Dockerfile
-    container_name: mrun-cards
-    ports:
-      - "8000:8000"
-    env_file:
-      - path: ./apps/cards-service/.env
-        required: false
-    environment:
-      <<: *common-env
-      DB_HOST: postgres
-      DB_NAME: cards
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - mrun-network
-    restart: unless-stopped
-
-  enrollment-service:
-    build:
-      context: ./apps/enrollment-service
-      dockerfile: Dockerfile
-    container_name: mrun-enrollment
-    ports:
-      - "8001:8001"
-    env_file:
-      - path: ./apps/enrollment-service/.env
-        required: false
-    environment:
-      <<: *common-env
-      DB_HOST: postgres
-      DB_NAME: enrollment
-      MINIO_ENDPOINT: minio:9000
-      MILVUS_HOST: milvus
-      KAFKA_ENABLED: "true"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      minio:
-        condition: service_started
-        required: false
-      milvus:
-        condition: service_started
-        required: false
-      kafka:
-        condition: service_started
-    networks:
-      - mrun-network
-    restart: unless-stopped
-
-  audit-service:
-    build:
-      context: .
-      dockerfile: apps/audit-service/Dockerfile
-    container_name: mrun-audit
-    ports:
-      - "3003:3003"
-    env_file:
-      - path: ./apps/audit-service/.env
-        required: false
-    environment:
-      <<: *common-env
-      KAFKA_ENABLED: "true"
-      CLICKHOUSE_HOST: clickhouse
-      CLICKHOUSE_ENABLED: "true"
-    depends_on:
-      - kafka
-      - clickhouse
-    networks:
-      - mrun-network
-    restart: unless-stopped
-
-  notification-service:
-    build:
-      context: .
-      dockerfile: apps/notification-service/Dockerfile
-    container_name: mrun-notification
-    ports:
-      - "3004:3004"
-    env_file:
-      - path: ./apps/notification-service/.env
-        required: false
-    environment:
-      <<: *common-env
-      KAFKA_ENABLED: "true"
-      DRAGONFLY_HOST: dragonfly
-      DRAGONFLY_ENABLED: ${DRAGONFLY_ENABLED:-false}
-    depends_on:
-      kafka:
-        condition: service_started
-      dragonfly:
-        condition: service_started
-        required: false
-    networks:
-      - mrun-network
-    restart: unless-stopped
-
-  analytics-service:
-    build:
-      context: .
-      dockerfile: apps/analytics-service/Dockerfile
-    container_name: mrun-analytics
-    ports:
-      - "3005:3005"
-    env_file:
-      - path: ./apps/analytics-service/.env
-        required: false
-    environment:
-      <<: *common-env
-      CLICKHOUSE_HOST: clickhouse
-      CLICKHOUSE_ENABLED: "true"
-    depends_on:
-      - clickhouse
-    networks:
-      - mrun-network
-    restart: unless-stopped
+  # ==================== Application services (run via Skaffold) ====================
+# Uncomment these services in docker-compose if you need to run them locally instead of Skaffold:
+#
+# users-service:
+#   build:
+#     context: ./apps/users-service
+#     dockerfile: Dockerfile
+#   container_name: mrun-users
+#   ports:
+#     - "3001:3000"
+#   env_file:
+#     - path: ./apps/users-service/.env
+#       required: false
+#   environment:
+#     <<: *common-env
+#     DB_HOST: postgres
+#     DB_NAME: users
+#   depends_on:
+#     postgres:
+#       condition: service_healthy
+#     consul:
+#       condition: service_started
+#       required: false
+#     kafka:
+#       condition: service_started
+#   networks:
+#     - mrun-network
+#   restart: unless-stopped
+#
+# api-gateway:
+#   build:
+#     context: ./apps/api-gateway
+#     dockerfile: Dockerfile
+#   container_name: mrun-gateway
+#   ports:
+#     - "3000:3000"
+#   env_file:
+#     - path: ./apps/api-gateway/.env
+#       required: false
+#   environment:
+#     <<: *common-env
+#   depends_on:
+#     - users-service
+#   networks:
+#     - mrun-network
+#   restart: unless-stopped
+#
+# cards-service:
+#   build:
+#     context: ./apps/cards-service
+#     dockerfile: Dockerfile
+#   container_name: mrun-cards
+#   ports:
+#     - "8000:8000"
+#   env_file:
+#     - path: ./apps/cards-service/.env
+#       required: false
+#   environment:
+#     <<: *common-env
+#     DB_HOST: postgres
+#     DB_NAME: cards
+#   depends_on:
+#     postgres:
+#       condition: service_healthy
+#   networks:
+#     - mrun-network
+#   restart: unless-stopped
+#
+# enrollment-service:
+#   build:
+#     context: ./apps/enrollment-service
+#     dockerfile: Dockerfile
+#   container_name: mrun-enrollment
+#   ports:
+#     - "8001:8001"
+#   env_file:
+#     - path: ./apps/enrollment-service/.env
+#       required: false
+#   environment:
+#     <<: *common-env
+#     DB_HOST: postgres
+#     DB_NAME: enrollment
+#     MINIO_ENDPOINT: minio:9000
+#     MILVUS_HOST: milvus
+#     KAFKA_ENABLED: "true"
+#   depends_on:
+#     postgres:
+#       condition: service_healthy
+#     minio:
+#       condition: service_started
+#       required: false
+#     milvus:
+#       condition: service_started
+#       required: false
+#     kafka:
+#       condition: service_started
+#   networks:
+#     - mrun-network
+#   restart: unless-stopped
+#
+# audit-service:
+#   build:
+#     context: .
+#     dockerfile: apps/audit-service/Dockerfile
+#   container_name: mrun-audit
+#   ports:
+#     - "3003:3003"
+#   env_file:
+#     - path: ./apps/audit-service/.env
+#       required: false
+#   environment:
+#     <<: *common-env
+#     KAFKA_ENABLED: "true"
+#     CLICKHOUSE_HOST: clickhouse
+#     CLICKHOUSE_ENABLED: "true"
+#   depends_on:
+#     - kafka
+#     - clickhouse
+#   networks:
+#     - mrun-network
+#   restart: unless-stopped
+#
+# notification-service:
+#   build:
+#     context: .
+#     dockerfile: apps/notification-service/Dockerfile
+#   container_name: mrun-notification
+#   ports:
+#     - "3004:3004"
+#   env_file:
+#     - path: ./apps/notification-service/.env
+#       required: false
+#   environment:
+#     <<: *common-env
+#     KAFKA_ENABLED: "true"
+#     DRAGONFLY_HOST: dragonfly
+#     DRAGONFLY_ENABLED: ${DRAGONFLY_ENABLED:-false}
+#   depends_on:
+#     kafka:
+#       condition: service_started
+#     dragonfly:
+#       condition: service_started
+#       required: false
+#   networks:
+#     - mrun-network
+#   restart: unless-stopped
+#
+# analytics-service:
+#   build:
+#     context: .
+#     dockerfile: apps/analytics-service/Dockerfile
+#   container_name: mrun-analytics
+#   ports:
+#     - "3005:3005"
+#   env_file:
+#     - path: ./apps/analytics-service/.env
+#       required: false
+#   environment:
+#     <<: *common-env
+#     CLICKHOUSE_HOST: clickhouse
+#     CLICKHOUSE_ENABLED: "true"
+#   depends_on:
+#     - clickhouse
+#   networks:
+#     - mrun-network
+#   restart: unless-stopped
 
 networks:
   mrun-network:

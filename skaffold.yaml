@@ -70,14 +70,11 @@ manifests:
       - infrastructure/bootstrap/namespace
       - infrastructure/apps
       - infrastructure/platform/external-services
-      - infrastructure/platform/databases/minio
-      - infrastructure/platform/databases/clickhouse
       - infrastructure/platform/databases/dragonflydb
       - infrastructure/platform/databases/milvus
-      - infrastructure/platform/databases/postgres
       - infrastructure/platform/discovery
       - infrastructure/platform/monitoring
-      - infrastructure/platform/networking
+#      - infrastructure/platform/networking
       - infrastructure/platform/identity
 
 deploy:

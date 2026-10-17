@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: camera-service
+  namespace: mrun-apps
+  labels:
+    app.kubernetes.io/name: camera-service
+    app.kubernetes.io/part-of: mrun-platform
+    app.kubernetes.io/component: camera
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: camera-service
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: camera-service
+        app.kubernetes.io/part-of: mrun-platform
+        app.kubernetes.io/component: camera
+    spec:
+      serviceAccountName: camera-service
+
+      securityContext:
+        fsGroup: 1000
+
+      containers:
+        - name: camera-service
+          image: mrun/camera-service
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 8000
+
+          envFrom:
+            - configMapRef:
+                name: camera-service-config
+            - secretRef:
+                name: camera-service-secret
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 10

@@ -8,8 +8,8 @@ metadata:
     app.kubernetes.io/component: external-service
 subsets:
   - addresses:
-      - ip: 172.19.0.10
+      - ip: 172.19.0.1
     ports:
       - name: kafka
-        port: 9092
+        port: 9094
         protocol: TCP

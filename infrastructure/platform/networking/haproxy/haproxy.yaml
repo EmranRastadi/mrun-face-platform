@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: haproxy-config
+  namespace: mrun-networking
+data:
+  haproxy.cfg: |
+    global
+      daemon
+      maxconn 2000
+      user haproxy
+      group haproxy
+
+    defaults
+      mode http
+      option dontlognull
+      timeout connect 5000ms
+      timeout client 50000ms
+      timeout server 50000ms
+
+    frontend frontend_http
+      bind *:80
+      default_backend services
+
+    backend services
+      balance roundrobin
+      option httpchk HEAD /
+      option http-ignore-probes
+      server api-gateway api-gateway.mrun-apps.svc.cluster.local:3000 check
+      server identity-service identity-service.mrun-apps.svc.cluster.local:3000 check
+      server notification-service notification-service.mrun-apps.svc.cluster.local:3004 check
+      server analytics-service analytics-service.mrun-apps.svc.cluster.local:3005 check
+      server audit-service audit-service.mrun-apps.svc.cluster.local:3003 check
