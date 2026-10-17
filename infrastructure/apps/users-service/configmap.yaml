@@ -10,10 +10,13 @@ data:
 
   PORT: "3000"
 
+  SERVICE_NAME: "users-service"
+
   LOG_LEVEL: "info"
 
   CONSUL_HOST: "consul.mrun-system.svc.cluster.local"
   CONSUL_PORT: "8500"
+  CONSUL_ENABLED: "true"
 
   KAFKA_BROKERS: "kafka.mrun-messaging.svc.cluster.local:9092"
   KAFKA_CLIENT_ID: "user-service"
@@ -23,7 +26,7 @@ data:
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo.mrun-monitoring.svc.cluster.local:4318"
 
   #######################  START POSTGRES ##########################
-  DB_HOST: "users-db-rw.mrun-database.svc.cluster.local"
+  DB_HOST: "postgresql.mrun-database.svc.cluster.local"
   DB_PORT: "5432"
   DB_USER: "users"
   DB_NAME: "users"

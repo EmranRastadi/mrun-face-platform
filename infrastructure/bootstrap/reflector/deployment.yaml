@@ -15,7 +15,7 @@ spec:
       serviceAccountName: reflector
       containers:
         - name: reflector
-          image: emberstack/kubernetes-reflector:7.1.50
+          image: emberstack/kubernetes-reflector:10.0.65
           resources:
             requests:
               cpu: 50m

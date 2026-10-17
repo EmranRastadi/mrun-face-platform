@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: dragonfly-config
+  namespace: mrun-system
+
+data:
+  DFLY_cache_mode: "true"
+  DFLY_maxmemory: "1gb"
+  DFLY_save_schedule: "''"

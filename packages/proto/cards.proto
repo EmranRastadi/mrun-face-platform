@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package mrun.cards.v1;
+
+service CardsService {
+  rpc GetCard(GetCardRequest) returns (GetCardResponse);
+  rpc CreateCard(CreateCardRequest) returns (CreateCardResponse);
+}
+
+message GetCardRequest {
+  string id = 1;
+}
+
+message GetCardResponse {
+  string id = 1;
+  string title = 2;
+}
+
+message CreateCardRequest {
+  string title = 1;
+}
+
+message CreateCardResponse {
+  string id = 1;
+}

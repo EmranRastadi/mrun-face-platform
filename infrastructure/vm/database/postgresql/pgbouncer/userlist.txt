@@ -1,0 +1,3 @@
+# Pgbouncer userlist
+# Format: "username" "password" "comment"
+"postgres" "password" "postgres user"

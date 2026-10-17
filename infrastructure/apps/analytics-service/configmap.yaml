@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: analytics-service-config
+  namespace: mrun-apps
+
+data:
+  ENVIRONMENT: "production"
+  PORT: "3005"
+  SERVICE_NAME: "analytics-service"
+  LOG_LEVEL: "INFO"
+
+  CONSUL_HOST: "consul.mrun-system.svc.cluster.local"
+  CONSUL_PORT: "8500"
+  CONSUL_ENABLED: "true"
+
+  #######################  START CLICKHOUSE ##########################
+  CLICKHOUSE_HOST: "clickhouse.mrun-system.svc.cluster.local"
+  CLICKHOUSE_PORT: "8123"
+  CLICKHOUSE_USER: "default"
+  CLICKHOUSE_DATABASE: "mrun"
+  CLICKHOUSE_ENABLED: "true"
+  #######################  END CLICKHOUSE ##########################

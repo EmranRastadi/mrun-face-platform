@@ -3,6 +3,7 @@ kind: HorizontalPodAutoscaler
 
 metadata:
   name: api-gateway
+  namespace: mrun-apps
 
 spec:
 

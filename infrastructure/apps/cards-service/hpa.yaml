@@ -3,11 +3,11 @@ kind: HorizontalPodAutoscaler
 
 metadata:
   name: cards-service
+  namespace: mrun-apps
 
 spec:
 
   scaleTargetRef:
-
     apiVersion: apps/v1
     kind: Deployment
     name: cards-service

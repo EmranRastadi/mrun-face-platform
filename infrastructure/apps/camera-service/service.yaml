@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: camera-service
+  namespace: mrun-apps
+  annotations:
+    consul.hashicorp.com/service-name: camera-service
+    consul.hashicorp.com/service-port: "8000"
+
+spec:
+  selector:
+    app.kubernetes.io/name: camera-service
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+  type: ClusterIP

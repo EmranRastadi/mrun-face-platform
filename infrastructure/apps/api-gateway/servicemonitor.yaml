@@ -9,7 +9,7 @@ spec:
   selector:
 
     matchLabels:
-      app: api-gateway
+      app.kubernetes.io/name: api-gateway
 
   endpoints:
 

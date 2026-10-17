@@ -11,7 +11,7 @@ import { User } from './users.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { KafkaService } from '../kafka/kafka.service';
-import { Topics } from 'src/kafka/topics';
+import { Topics } from '../kafka/topics';
 
 @Injectable()
 export class UsersService {

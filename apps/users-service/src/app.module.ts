@@ -12,8 +12,6 @@ import { KafkaModule } from './kafka/kafka.module';
      PlatformConfigModule,
      ConfigModule.forRoot({
       isGlobal: true,
-      // load: [configuration],
-      // validationSchema,
     }),
       KafkaModule,
       TypeOrmModule.forRootAsync({

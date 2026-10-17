@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-
-metadata:
-  name: strimzi-cluster-operator
-  namespace: mrun-messaging
-
-data:
-  STRIMZI_NAMESPACE: "mrun-messaging"

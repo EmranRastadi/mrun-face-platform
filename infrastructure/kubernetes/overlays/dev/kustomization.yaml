@@ -4,9 +4,11 @@ kind: Kustomization
 namespace: mrun-apps
 
 resources:
-  - ../../base
+  - ../../../platform/external-services
 
 patches:
   - path: patches/api-gateway.yaml
   - path: patches/users-service.yaml
   - path: patches/cards-service.yaml
+  - path: patches/kafka-endpoints.yaml
+  - path: patches/postgresql-endpoints.yaml

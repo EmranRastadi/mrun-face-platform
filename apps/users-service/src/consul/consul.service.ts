@@ -28,6 +28,12 @@ export class ConsulService {
     return this.config.get<string>('POD_IP', '127.0.0.1');
   }
 
+  // Unique per instance so a terminating pod's deregistration cannot remove a
+  // sibling/newer pod that shares the same service name.
+  private get serviceId(): string {
+    return `${this.serviceName}-${this.podIp}`;
+  }
+
   async get(key: string): Promise<string | undefined> {
     try {
       const { data } = await firstValueFrom(
@@ -64,7 +70,7 @@ export class ConsulService {
       });
       await firstValueFrom(
           this.http.put(`${this.baseUrl}/v1/agent/service/register`, {
-            ID: this.serviceName,
+            ID: this.serviceId,
             Name: this.serviceName,
             Address: this.podIp,
             Port: this.servicePort,
@@ -72,6 +78,8 @@ export class ConsulService {
               HTTP: `http://${this.podIp}:${this.servicePort}/health`,
               Interval: '10s',
               Timeout: '5s',
+              // Auto-remove stale instances (killed pods that never deregistered).
+              DeregisterCriticalServiceAfter: '5m',
             },
           }),
       );
@@ -89,12 +97,12 @@ export class ConsulService {
     try {
       await firstValueFrom(
           this.http.put(
-              `${this.baseUrl}/v1/agent/service/deregister/${this.serviceName}`,
+              `${this.baseUrl}/v1/agent/service/deregister/${this.serviceId}`,
           ),
       );
 
       this.logger.log(
-          `Deregistered service "${this.serviceName}" from Consul`,
+          `Deregistered service "${this.serviceId}" from Consul`,
       );
     } catch (error) {
       this.logger.error('Failed to deregister service from Consul', error);

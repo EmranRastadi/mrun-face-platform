@@ -1,0 +1,40 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: enrollment-db
+  namespace: mrun-database
+
+spec:
+  instances: 3
+
+  imageName: ghcr.io/cloudnative-pg/postgresql:17
+
+  storage:
+    size: 20Gi
+
+  bootstrap:
+    initdb:
+      database: enrollment
+      owner: enrollment
+      secret:
+        name: enrollment-db-app
+
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+
+  monitoring:
+    enablePodMonitor: false
+
+  primaryUpdateStrategy: unsupervised
+
+  postgresql:
+    parameters:
+      max_connections: "200"
+      shared_buffers: "256MB"
+      effective_cache_size: "768MB"
+      work_mem: "4MB"

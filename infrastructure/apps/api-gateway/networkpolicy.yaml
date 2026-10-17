@@ -3,13 +3,14 @@ kind: NetworkPolicy
 
 metadata:
   name: api-gateway
+  namespace: mrun-apps
 
 spec:
 
   podSelector:
 
     matchLabels:
-      app: api-gateway
+      app.kubernetes.io/name: api-gateway
 
   policyTypes:
     - Ingress

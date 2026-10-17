@@ -23,11 +23,13 @@ class ConsulClient:
             service_id=service_id,
             address=address,
             port=port,
-            check=consul.Check.http(
-                f"http://{address}:{port}/health",
-                interval="10s",
-                timeout="5s"
-            )
+            check={
+                "HTTP": f"http://{address}:{port}/health",
+                "Interval": "10s",
+                "Timeout": "5s",
+                # Auto-remove stale instances (killed pods that never deregistered).
+                "DeregisterCriticalServiceAfter": "5m",
+            },
         )
 
 

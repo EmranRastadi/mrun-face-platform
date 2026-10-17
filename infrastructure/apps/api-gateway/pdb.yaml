@@ -3,6 +3,7 @@ kind: PodDisruptionBudget
 
 metadata:
   name: api-gateway
+  namespace: mrun-apps
 
 spec:
 
@@ -11,4 +12,4 @@ spec:
   selector:
 
     matchLabels:
-      app: api-gateway
+      app.kubernetes.io/name: api-gateway

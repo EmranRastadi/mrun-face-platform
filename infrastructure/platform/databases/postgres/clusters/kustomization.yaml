@@ -3,4 +3,5 @@ kind: Kustomization
 
 resources:
   - users-db
-  # - cards-db
+  - cards-db
+  - enrollment-db

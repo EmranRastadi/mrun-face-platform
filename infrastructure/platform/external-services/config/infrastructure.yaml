@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: infrastructure
+  namespace: mrun-system
+data:
+  POSTGRES_IP: "172.19.0.1"
+  KAFKA_IP: "172.19.0.1"
+  KAFKA_EXTERNAL_PORT: "9094"
+  CLICKHOUSE_IP: "172.19.0.1"

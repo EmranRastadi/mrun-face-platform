@@ -3,6 +3,7 @@ kind: HorizontalPodAutoscaler
 
 metadata:
   name: users-service
+  namespace: mrun-apps
 
 spec:
 

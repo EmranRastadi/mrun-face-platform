@@ -15,15 +15,11 @@ export class AppController {
       status: 'ok',
     };
   }
-  @Get('users')
-  users() {
-    return {
-      results: [
-        {
-          name: 'emran',
-          age: 33,
-        },
-      ],
-    };
-  }
+  // @Get('users')
+  // async users() {
+  //   const usersList = await axios.get(`${process.env.USERS_SERVICE_URL}/users`);
+  //   return {
+  //     results: usersList,
+  //   };
+  // }
 }

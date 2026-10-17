@@ -5,3 +5,11 @@ resources:
   - api-gateway
   - cards-service
   - users-service
+  - identity-service
+  - camera-service
+  - similarity-service
+  - worker-service
+  - enrollment-service
+  - audit-service
+  - notification-service
+  - analytics-service

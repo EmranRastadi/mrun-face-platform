@@ -3,11 +3,10 @@ kind: Kustomization
 
 resources:
   # - cloudnative-pg
-  # - postgres
+  - external-services
   - discovery
   - databases
   - monitoring
-  - external-services
 #  - kafka
 #  - keycloak
 #  - milvus

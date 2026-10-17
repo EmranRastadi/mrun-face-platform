@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+httpx
+pydantic
+pydantic-settings
+python-consul
+boto3
+pymilvus
+psycopg[binary]
+kafka-python
+python-multipart

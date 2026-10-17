@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+
+metadata:
+  name: similarity-service
+  namespace: mrun-apps
+
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: similarity-service
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector: {}
+  egress:
+    - to:
+        - namespaceSelector: {}

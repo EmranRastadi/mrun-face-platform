@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: clickhouse-config
+  namespace: mrun-system
+
+data:
+  CLICKHOUSE_DB: "mrun"
+  CLICKHOUSE_USER: "default"
+  CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"

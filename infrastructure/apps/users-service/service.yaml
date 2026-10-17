@@ -10,8 +10,7 @@ metadata:
 
 spec:
   selector:
-    app: users-service
-
+    app.kubernetes.io/name: users-service
   ports:
     - name: http
       port: 3000
