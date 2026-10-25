@@ -132,7 +132,7 @@ async def call_service(service_name: str, path: str = ""):
     service into an open proxy (SSRF). Path is sanitized to a
     relative path only.
     """
-    allowed = {"mrun-users", "mrun-cards", "mrun-enrollment", "users-service", "cards-service", "enrollment-service"}
+    allowed = {"mrun-users", "mrun-enrollment", "users-service", "cards-service", "enrollment-service"}
     if service_name not in allowed:
         raise HTTPException(status_code=403, detail=f"Service '{service_name}' is not in the allowlist")
     if not settings.consul_enabled:

@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/part-of: mrun-platform
     app.kubernetes.io/component: cards
   annotations:
-    consul.hashicorp.com/service-name: mrun-cards
+    consul.hashicorp.com/service-name: cards-service
     consul.hashicorp.com/service-port: "8000"
 
 spec:
