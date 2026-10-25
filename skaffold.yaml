@@ -68,12 +68,13 @@ manifests:
   kustomize:
     paths:
       - infrastructure/bootstrap/namespace
-      - infrastructure/apps
+      - infrastructure/platform/discovery
       - infrastructure/platform/external-services
       - infrastructure/platform/databases/dragonflydb
+      - infrastructure/platform/databases/minio
       - infrastructure/platform/databases/milvus
-      - infrastructure/platform/discovery
       - infrastructure/platform/monitoring
+      - infrastructure/apps
 #      - infrastructure/platform/networking
       - infrastructure/platform/identity
 

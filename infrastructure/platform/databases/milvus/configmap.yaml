@@ -8,5 +8,7 @@ metadata:
 data:
   ETCD_ENDPOINTS: "etcd.mrun-system.svc.cluster.local:2379"
   MINIO_ADDRESS: "minio.mrun-system.svc.cluster.local:9000"
+  MINIO_ACCESS_KEY_ID: "minioadmin"
+  MINIO_SECRET_ACCESS_KEY: "minioadmin"
   MINIO_BUCKET_NAME: "milvus"
   COMMON_STORAGETYPE: "minio"
