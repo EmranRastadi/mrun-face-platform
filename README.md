@@ -187,9 +187,9 @@ Service port; `container` is the port the process listens on.
 | Service                  | Language / framework | Service → container                | Stores                               | Key deps                                                        | Responsibility                                               |
 | ------------------------ | -------------------- | ---------------------------------- | ------------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------------ |
 | **api-gateway**          | NestJS               | `80` → `3000` (NodePort **30080**) | —                                    | axios, `@nestjs/axios`, consul, zod                             | Edge routing / reverse proxy, Swagger, auth passthrough      |
-| **users-service**        | NestJS               | `3000` → `3000`                    | Postgres `users`                     | TypeORM, pg, `@nestjs/jwt`, passport, bcryptjs, kafkajs, consul | Users, credentials, JWT issuance, profiles                   |
+| **users-service**        | NestJS               | `3000` → `3000`                    | Postgres `users`                     | TypeORM, pg, `@nestjs/jwt`, passport, bcryptjs, kafkajs, consul | Users, credentials, JWT issuance, RBAC, profiles             |
 | **identity-service**     | NestJS               | `3000` → `3000`                    | Keycloak                             | kafkajs                                                         | Identity / access, Keycloak integration, rate-limit + dedupe |
-| **cards-service**        | FastAPI              | `3000` → `8000`                    | Postgres `cards`, MinIO              | httpx, python-consul                                            | Card lifecycle; image storage                                |
+| **cards-service**        | FastAPI              | `3000` → `8000`                    | Postgres `cards`, MinIO              | httpx, python-consul, PyJWT                                     | Card lifecycle; image storage; JWT verification              |
 | **camera-service**       | FastAPI              | `8000` → `8000`                    | —                                    | pydantic-settings                                               | Camera/frame ingest (scaffold)                               |
 | **similarity-service**   | FastAPI              | `8000` → `8000`                    | Milvus                               | pydantic-settings                                               | Vector similarity search (scaffold)                          |
 | **worker-service**       | FastAPI              | `8000` → `8000`                    | Kafka                                | kafka-python                                                    | Background recognition worker (Kafka consumer, scaffold)     |
@@ -216,16 +216,18 @@ Service port; `container` is the port the process listens on.
 
 ### Per-service notes
 
-- **api-gateway** — stateless NestJS edge. Proxies `/users`, `/enrollment/*`, `/notifications/*`,
-  `/analytics/*`, `/audit/*`; serves Swagger at `/api`; exposes `/` (`Hello World Edited!`) and
-  `/health`. Only service with a **NodePort**. When `CONSUL_ENABLED=true` it both registers itself
-  and resolves upstream targets from the Consul catalog, falling back to the static `*_SERVICE_URL`
-  env vars when Consul is disabled or unavailable.
-- **users-service** — TypeORM + Postgres (schema-per-app DB `users`). Issues JWTs (7d default).
-  Produces `user.events`.
+- **api-gateway** — stateless NestJS edge. Proxies `/auth/*`, `/users`, `/cards`,
+  `/enrollment/*`, `/notifications/*`, `/analytics/*`, `/audit/*`; serves Swagger at `/api`;
+  exposes `/` (`Hello World Edited!`) and `/health`. Only service with a **NodePort**. When
+  `CONSUL_ENABLED=true` it both registers itself and resolves upstream targets from the Consul
+  catalog, falling back to the static `*_SERVICE_URL` env vars when Consul is disabled or
+  unavailable. It verifies inbound JWTs and enforces role checks before proxying.
+- **users-service** — TypeORM + Postgres (schema-per-app DB `users`). Issues HS256 JWTs (7d default)
+  and owns user roles/RBAC. Produces `user.events`.
 - **identity-service** — Exposes `/health` (Consul health-check target) and registers with Consul.
 - **cards-service** — FastAPI storing card metadata in Postgres and images in the `cards-images`
-  MinIO bucket. Emits `card.events`.
+  MinIO bucket. Emits `card.events`. Verifies the users-service JWT for write/read access.
+
 - **enrollment-service** — The richest service: Postgres metadata (truth) + MinIO `enroll` images +
   Milvus `face_embeddings` vectors. Falls back to an in-memory repo when Postgres is down. Emits
   `enrollment.events`.
@@ -235,6 +237,30 @@ Service port; `container` is the port the process listens on.
   rate limiting, emits `notification.delivered`.
 - **camera / similarity / worker** — scaffold services that define the vision pipeline contract
   (Kafka + gRPC) and are deploy-ready.
+
+#### Auth & RBAC
+
+Authentication is issued by **users-service** and verified by **api-gateway** and **cards-service**
+using a shared HS256 secret (`JWT_SECRET`). The token is valid for `JWT_EXPIRES_IN` (default `7d`)
+and carries `sub`, `username`, `role`, `iss`, and `aud`.
+
+| Role       | Can do                                                                 |
+| ---------- | ---------------------------------------------------------------------- |
+| `admin`    | Full user management, change roles, read/write cards, Consul diagnostics |
+| `operator` | Create/read cards                                                      |
+| `viewer`   | Read cards and own profile                                             |
+
+- `POST /auth/login` (public) exchanges username/password for an access token.
+- `GET /auth/me` returns the authenticated user.
+- `POST /users`, `GET /users`, `DELETE /users/:id`, and `PATCH /users/:id/role` are **admin-only**.
+- `GET/PATCH /users/:id` are **admin or self**; users cannot change their own role.
+- `POST /cards` requires `admin` or `operator`; `GET /cards` requires any authenticated role.
+- `/`, `/health`, and `/info` remain public on the services.
+- The first admin is created from `BOOTSTRAP_ADMIN_USERNAME` / `BOOTSTRAP_ADMIN_PASSWORD` when the
+  users table has no admin. Change those values (and `JWT_SECRET`) in
+  `infrastructure/apps/users-service/secret.yaml` before using this outside local development.
+- Role changes affect **new logins**; an already-issued token keeps its `role` claim until it
+  expires. Log in again after a role change.
 
 ---
 
@@ -604,7 +630,7 @@ is committed, while `.env` is git-ignored.
 | Postgres   | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`                                       |
 | Consul     | `CONSUL_HOST`, `CONSUL_PORT`, `CONSUL_ENABLED`                                                  |
 | Kafka      | `KAFKA_BROKERS`                                                                                 |
-| Auth       | `JWT_SECRET`, `JWT_EXPIRES_IN`                                                                  |
+| Auth       | `JWT_SECRET`, `JWT_EXPIRES_IN`, `JWT_ISSUER`, `JWT_AUDIENCE`, `BOOTSTRAP_ADMIN_USERNAME`, `BOOTSTRAP_ADMIN_PASSWORD` |
 | Dragonfly  | `DRAGONFLY_HOST`, `DRAGONFLY_PORT`                                                              |
 | MinIO      | `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET`                        |
 | Milvus     | `MILVUS_HOST`, `MILVUS_PORT`, `MILVUS_COLLECTION`, `MILVUS_DIM` (512)                           |

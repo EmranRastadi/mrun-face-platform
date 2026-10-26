@@ -6,6 +6,7 @@ import {TypeORMConfigService} from "./config/ormconfig.service";
 import {UsersModule} from "./users/users.module";
 import { AppController } from './app.controller';
 import { KafkaModule } from './kafka/kafka.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { KafkaModule } from './kafka/kafka.module';
           imports: [ConfigModule],
       }),
       UsersModule,
+      AuthModule,
 
     // TypeOrmModule.forRootAsync(DatabaseConfig),
   ],

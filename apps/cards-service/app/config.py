@@ -27,6 +27,11 @@ class Settings(BaseSettings):
 
     keycloak_url: str = "http://keycloak.mrun-security.svc.cluster.local:8080"
 
+    jwt_secret: str = ""
+    jwt_algorithm: str = "HS256"
+    jwt_issuer: str = "mrun-users-service"
+    jwt_audience: str = "mrun-platform"
+
     class Config:
         env_file = ".env"
         extra = "ignore"

@@ -13,4 +13,11 @@ export default () => ({
     database: process.env.DB_NAME,
     ssl: process.env.DB_SSL === 'true',
   },
+
+  security: {
+    jwtSecret: process.env.JWT_SECRET,
+    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
+    jwtIssuer: process.env.JWT_ISSUER || 'mrun-users-service',
+    jwtAudience: process.env.JWT_AUDIENCE || 'mrun-platform',
+  },
 });

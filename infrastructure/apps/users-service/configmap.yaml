@@ -25,6 +25,12 @@ data:
 
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo.mrun-monitoring.svc.cluster.local:4318"
 
+  #######################  START JWT ##########################
+  JWT_EXPIRES_IN: "7d"
+  JWT_ISSUER: "mrun-users-service"
+  JWT_AUDIENCE: "mrun-platform"
+  #######################  END JWT ##########################
+
   #######################  START POSTGRES ##########################
   DB_HOST: "postgresql.mrun-database.svc.cluster.local"
   DB_PORT: "5432"

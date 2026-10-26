@@ -68,10 +68,10 @@ async function bootstrap() {
   await app.listen(port, '0.0.0.0');
 
   try {
-    await axios.get(`${userService}/users`);
+    await axios.get(`${userService}/health`);
   } catch (error) {
     logger.warn(
-      `Users service not reachable at ${userService}/users`,
+      `Users service not reachable at ${userService}/health`,
       error instanceof Error ? error.message : String(error),
     );
   }

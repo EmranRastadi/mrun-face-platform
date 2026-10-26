@@ -56,6 +56,14 @@ data:
   SERVICE_NAME: "cards-service"
 
   ####################################
+  # JWT
+  ####################################
+
+  JWT_ALGORITHM: "HS256"
+  JWT_ISSUER: "mrun-users-service"
+  JWT_AUDIENCE: "mrun-platform"
+
+  ####################################
   # Internal Services
   ####################################
 

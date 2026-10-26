@@ -1,7 +1,9 @@
 # DDD Boundaries
 
-## Identity & Access (identity-service, users-service)
-- Aggregates: User, Session. Owns credentials, JWT issuance, profiles.
+## Identity & Access (users-service, identity-service)
+- `users-service` owns the User aggregate + Role (`admin` / `operator` / `viewer`), credentials,
+  profiles, and HS256 JWT issuance.
+- `identity-service` is the Keycloak integration boundary; it does not own the credentials table.
 - DB: `users-db` (Postgres cluster). No other service writes here.
 
 ## Cards (cards-service)
@@ -33,4 +35,4 @@
 - Pure read model over ClickHouse. No Kafka, no writes.
 
 ## Gateway
-- No domain logic. Routing, auth passthrough, aggregation only.
+- No domain logic. Routing, JWT verification, RBAC enforcement, and aggregation only.

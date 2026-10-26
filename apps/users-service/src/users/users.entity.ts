@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
+import { Role } from '../auth/roles.enum';
 
 @Entity('users')
 export class User {
@@ -18,7 +19,7 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({ select: false })
   @Exclude()
   password: string;
 
@@ -27,6 +28,9 @@ export class User {
 
   @Column({ default: true })
   is_active: boolean;
+
+  @Column({ type: 'varchar', length: 20, default: Role.VIEWER })
+  role: Role;
 
   @CreateDateColumn()
   created_at: Date;

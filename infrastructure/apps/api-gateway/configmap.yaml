@@ -20,7 +20,12 @@ data:
 
   KEYCLOAK_URL: "http://keycloak.mrun-security.svc.cluster.local:8080"
 
+  JWT_EXPIRES_IN: "7d"
+  JWT_ISSUER: "mrun-users-service"
+  JWT_AUDIENCE: "mrun-platform"
+
   USERS_SERVICE_URL: "http://users-service:3000"
+  CARDS_SERVICE_URL: "http://cards-service:3000"
   ORDERS_SERVICE_URL: "http://orders-service:3000"
   ENROLLMENT_SERVICE_URL: "http://enrollment-service.mrun-apps.svc.cluster.local:8001"
   AUDIT_SERVICE_URL: "http://audit-service.mrun-apps.svc.cluster.local:3003"

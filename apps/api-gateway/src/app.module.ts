@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users-service/users.module';
 import { ProxyModule } from './proxy/proxy.module';
+import { SecurityModule } from './auth/security.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ProxyModule } from './proxy/proxy.module';
       envFilePath: ['.env.local', '.env'],
       expandVariables: true,
     }),
+    SecurityModule,
     UsersModule,
     ProxyModule,
   ],
