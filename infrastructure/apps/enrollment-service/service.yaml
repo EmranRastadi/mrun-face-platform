@@ -7,7 +7,9 @@ metadata:
   annotations:
     consul.hashicorp.com/service-name: enrollment-service
     consul.hashicorp.com/service-port: "8001"
-
+  labels:
+    app.kubernetes.io/name: enrollment-service
+    app.kubernetes.io/part-of: mrun-platform
 spec:
   selector:
     app.kubernetes.io/name: enrollment-service

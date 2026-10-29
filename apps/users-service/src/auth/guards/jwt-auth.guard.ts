@@ -6,8 +6,8 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { Role } from '../roles.enum';
-import { JwtClaims, JwtPayload } from '../jwt-payload.interface';
+import { Role } from '@mrun/contracts';
+import type { JwtClaims, JwtPayload } from '@mrun/contracts';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {

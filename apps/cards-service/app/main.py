@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from .config import settings
 from .models import ServiceInfo, HealthStatus, ServiceResponse, Card
 from .utils import get_logger, consul_client
+from .observability import setup_observability
 from .auth import CurrentUser, Role, get_current_user, require_roles
 
 logger = get_logger(__name__)
@@ -49,6 +50,8 @@ app = FastAPI(
     description="Service for managing cards",
     lifespan=lifespan
 )
+
+setup_observability(app, settings.service_name, settings.service_version)
 
 # ==================== API Endpoints ====================
 

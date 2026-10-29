@@ -26,8 +26,22 @@ This directory contains Kubernetes manifests and kustomize configurations for th
 - Consul - service discovery
 
 ### Monitoring
-- Grafana - visualization
-- Tempo - tracing
+- kube-prometheus-stack (Helm) - Prometheus Operator, Prometheus, kube-state-metrics, node-exporter
+- Grafana - dashboards for metrics (Prometheus), logs (Loki) and traces (Tempo)
+- Loki - log store, fed by the Fluent Bit DaemonSet
+- Tempo - trace store (OTLP gRPC `4317`, HTTP `4318`)
+- Fluent Bit - tails `/var/log/containers/*.log` on every node and ships JSON logs to Loki
+
+Install everything with:
+
+```bash
+make monitoring
+# or
+./infrastructure/scripts/install-monitoring.sh
+```
+
+After that, app-level `ServiceMonitor` objects are applied together with the apps
+(`kubectl apply -k infrastructure/apps`).
 
 ## Usage
 

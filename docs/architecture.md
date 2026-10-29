@@ -32,8 +32,7 @@ Monorepo: `apps/*` (deployables) + `packages/*` (shared) + `infrastructure/*` (K
 
 ## Shared packages
 
-- `@mrun/common` — Result, pagination, health, logging helpers.
-- `@mrun/ddd` — Entity, ValueObject, AggregateRoot, Repository.
+- `@mrun/contracts` — dependency-free shapes shared by the NestJS services: `Role`, JWT claims, user payload interfaces, pagination types.
 - `@mrun/events` — Kafka topic constants + `BaseEvent` envelope.
 - `@mrun/proto` — `cards|camera|similarity.proto`, generated via `buf`.
 

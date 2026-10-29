@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, MinLength } from 'class-validator';
+import type { LoginPayload } from '@mrun/contracts';
 
-export class LoginDto {
+export class LoginDto implements LoginPayload {
   @ApiProperty({ example: 'admin' })
   @IsString()
   @MinLength(1)

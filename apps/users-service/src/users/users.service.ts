@@ -12,7 +12,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { KafkaService } from '../kafka/kafka.service';
 import { Topics } from '../kafka/topics';
-import { Role } from '../auth/roles.enum';
+import { Role } from '@mrun/contracts';
 
 @Injectable()
 export class UsersService {

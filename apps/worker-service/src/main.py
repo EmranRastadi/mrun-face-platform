@@ -11,6 +11,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from .observability import setup_observability
+
 START_TIME = time.time()
 KAFKA_ENABLED = os.getenv("KAFKA_ENABLED", "false").lower() == "true"
 KAFKA_BROKERS = os.getenv("KAFKA_BROKERS", "kafka:9092")
@@ -29,6 +31,8 @@ app = FastAPI(
     description="Recognition worker (Kafka consumer scaffold)",
     lifespan=lifespan,
 )
+
+setup_observability(app, "worker-service")
 
 
 @app.get("/health")

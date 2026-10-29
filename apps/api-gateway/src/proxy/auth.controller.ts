@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Req, Res } from '@nestjs/common';
+import { Controller, Get, Post, Query, Req, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { ProxyService } from './proxy.service';
-import { Public } from '../auth/public.decorator';
+import { Public } from '../auth-service/public.decorator';
+import { LoginDto } from 'src/auth-service/dto/auth-login.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -11,7 +12,7 @@ export class AuthProxyController {
 
   @Public()
   @Post('login')
-  login(@Req() req: Request, @Res() res: Response) {
+  login(@Query() loginDto: LoginDto, @Req() req: Request, @Res() res: Response) {
     return this.proxy.forward('USERS_SERVICE_URL', req, res);
   }
 

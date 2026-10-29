@@ -24,6 +24,7 @@ from .models import HealthStatus, ServiceResponse
 from .schemas import EnrollRequest, EnrollResponse, PersonResponse
 from .storage_s3 import object_storage
 from .utils import consul_client, get_logger
+from .observability import setup_observability
 from .vector_milvus import vector_store
 
 logger = get_logger(__name__)
@@ -56,6 +57,8 @@ app = FastAPI(
     description="Person/face enrollment (MinIO + Milvus + Postgres + Kafka)",
     lifespan=lifespan,
 )
+
+setup_observability(app, settings.service_name, settings.service_version)
 
 
 @app.get("/")

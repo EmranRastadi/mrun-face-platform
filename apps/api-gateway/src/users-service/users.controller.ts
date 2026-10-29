@@ -16,8 +16,8 @@ import { UsersService } from './users.service';
 import { UserCreateDto } from './dto/user-create.dto';
 import { UserUpdateDto } from './dto/user-update.dto';
 import { UserRoleUpdateDto } from './dto/user-role-update.dto';
-import { Roles } from '../auth/roles.decorator';
-import { Role } from '../auth/roles.enum';
+import { Roles } from '../auth-service/roles.decorator';
+import { Role } from '@mrun/contracts';
 
 @ApiTags('users')
 @ApiBearerAuth('access-token')

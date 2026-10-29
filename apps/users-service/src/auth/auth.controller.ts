@@ -12,7 +12,7 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
-import type { JwtPayload } from './jwt-payload.interface';
+import type { JwtPayload } from '@mrun/contracts';
 import { UsersService } from '../users/users.service';
 
 @ApiTags('auth')

@@ -148,7 +148,7 @@ sequenceDiagram
 | APIs             | REST (OpenAPI/Swagger) + gRPC/protobuf (`buf`)                                                            |
 | Packaging        | Docker (multi-stage), Skaffold build (`mrun/*` images)                                                    |
 | Orchestration    | **Kubernetes** (kind for local), **Kustomize** overlays, **Skaffold v4**                                  |
-| Observability    | Grafana (provisioned dashboards), OpenTelemetry OTLP endpoints, Winston JSON logs                         |
+| Observability    | kube-prometheus-stack (Prometheus Operator), Grafana, Loki, Tempo, Fluent Bit, OpenTelemetry OTLP, Winston JSON logs |
 
 ---
 
@@ -158,8 +158,7 @@ sequenceDiagram
 .
 ├── apps/                     # 11 deployable services (see catalog)
 ├── packages/                 # shared libraries (never deployed directly)
-│   ├── common/  @mrun/common  # Result, pagination, health/logging helpers
-│   ├── DDD/     @mrun/ddd     # Entity, ValueObject, AggregateRoot, Repository
+│   ├── contracts/ @mrun/contracts # Role, JWT claims, user/pagination shapes
 │   ├── events/  @mrun/events  # Kafka topic constants + BaseEvent envelope
 │   └── proto/   @mrun/proto   # camera/cards/similarity .proto (buf)
 ├── infrastructure/
@@ -169,7 +168,7 @@ sequenceDiagram
 │   ├── vm/                   # compose init scripts (Postgres/ClickHouse SQL)
 │   └── kustomization.yaml    # root: bootstrap → platform → apps
 ├── docs/                     # architecture, DDD boundaries, API contracts, Kafka topics
-├── scripts/up.sh             # one-command local bring-up
+├── scripts/                  # up.sh, kind-up.sh, docker-clean.sh
 ├── docker-compose.yml        # local infrastructure (and optional app containers)
 ├── skaffold.yaml             # build + deploy to Kubernetes
 ├── kind-config.yaml          # local kind cluster (host :80/:443 → node 30080/30443)
@@ -268,8 +267,8 @@ and carries `sub`, `username`, `role`, `iss`, and `aud`.
 
 | Package           | npm name       | Contents                                                                      |
 | ----------------- | -------------- | ----------------------------------------------------------------------------- |
-| `packages/common` | `@mrun/common` | `Result`, pagination helpers, health/logging helpers                          |
-| `packages/DDD`    | `@mrun/ddd`    | `Entity`, `ValueObject`, `AggregateRoot`, `Repository` base types             |
+| `packages/contracts` | `@mrun/contracts` | `Role`, JWT claims, user payload interfaces, pagination types |
+| `packages/observability` | `@mrun/observability` | Prometheus registry + `/metrics` middleware and OTLP tracing bootstrap |
 | `packages/events` | `@mrun/events` | `KafkaTopics`, consumer groups, partition keys, `BaseEvent` envelope          |
 | `packages/proto`  | `@mrun/proto`  | `camera.proto`, `cards.proto`, `similarity.proto` (generated stubs via `buf`) |
 
@@ -315,6 +314,10 @@ flowchart TB
     end
     subgraph Mon["mrun-monitoring"]
       GF[grafana 11.5.2]
+      PR[prometheus]
+      LK[loki]
+      TP[tempo]
+      FB[fluent-bit]
     end
     Apps["mrun-apps: 11 services"]
   end
@@ -347,19 +350,25 @@ flowchart TB
 | **etcd**      | `quay.io/coreos/etcd:v3.5.5`                         | `mrun-system`     | Milvus metadata backend                                  |
 | **Consul**    | `hashicorp/consul:1.21`                              | `mrun-system`     | Service discovery + UI                                   |
 | **Keycloak**  | `quay.io/keycloak/keycloak:26.0.2`                   | `mrun-security`   | OIDC / identity provider (shares Postgres DB `keycloak`) |
-| **Grafana**   | `grafana/grafana:11.5.2`                             | `mrun-monitoring` | Dashboards (provisioned)                                 |
-| **Prometheus** | `prom/prometheus:v2.55.1`                           | `mrun-monitoring` | Cluster metrics store (7-day retention)                  |
+| **Grafana**   | `grafana/grafana:11.5.2`                             | `mrun-monitoring` | Dashboards (provisioned, Prometheus + Loki + Tempo)      |
+| **Prometheus** | `quay.io/prometheus/prometheus:v3.15.1` (kube-prometheus-stack) | `mrun-monitoring` | Metrics store (7-day retention, operator-managed)  |
 | **kube-state-metrics** | `bitnamilegacy/kube-state-metrics:2.14.0`    | `mrun-monitoring` | Kubernetes object/pod/deployment metrics                 |
 | **node-exporter** | `prom/node-exporter:v1.8.2`                      | `mrun-monitoring` | Node CPU, memory, filesystem, network metrics            |
+| **Loki**      | `grafana/loki:3.6.16`                                | `mrun-monitoring` | Log store (7-day retention, filesystem)                  |
+| **Tempo**     | `grafana/tempo:2.9.0`                                | `mrun-monitoring` | Trace store (OTLP gRPC/HTTP, local blocks)               |
+| **Fluent Bit**| `cr.fluentbit.io/fluent/fluent-bit:5.1.3`            | `mrun-monitoring` | Tails pod logs on every node and ships them to Loki      |
 | **Reflector** | `emberstack/kubernetes-reflector:10.0.65`            | `mrun-system`     | Syncs Secrets/ConfigMaps between namespaces              |
 
-> **Observability:** Grafana's Prometheus datasource points at
-> `prometheus.mrun-monitoring.svc.cluster.local:9090`. The provisioned **MRUN Platform Overview**
-> dashboard covers nodes, namespaces, pods, deployments, statefulsets, daemonsets, CPU, memory,
-> network, restarts, services, and PVCs, with `namespace`, `pod`, `node`, `service`, and `interval`
-> variables. Logs and traces are intentionally **not** provisioned; add Loki/Tempo later if needed.
-> Open Grafana with `kubectl -n mrun-monitoring port-forward svc/grafana 3000:3000` (credentials in
-> `grafana-secret`); Prometheus is available the same way on port `9090`.
+> **Observability:** the Prometheus Operator stack is installed with Helm
+> (`make monitoring` → `infrastructure/scripts/install-monitoring.sh`), while Grafana, Loki,
+> Tempo, Fluent Bit and every app `ServiceMonitor` stay in kustomize. Grafana points at
+> `kube-prometheus-stack-prometheus.mrun-monitoring.svc.cluster.local:9090` and ships the
+> **MRUN Platform Overview** and **MRUN Logs** dashboards. Every app exposes `/metrics`
+> (`http_requests_total`, `http_request_duration_seconds`, `app_info`, default process
+> metrics) on its `http` container port. Logs are JSON on stdout, shipped by Fluent Bit to
+> Loki; traces are exported over OTLP/HTTP to Tempo (`OTEL_EXPORTER_OTLP_ENDPOINT`).
+> Open Grafana with `kubectl -n mrun-monitoring port-forward svc/grafana 3000:3000`
+> (credentials in `grafana-secret`).
 
 ### The external-services bridge (why it exists)
 
@@ -492,33 +501,67 @@ deadlock two pods on a single `ReadWriteOnce` volume.
 ./scripts/up.sh
 ```
 
-It performs four steps:
+It performs five steps:
 
 1. **Persist host sysctl** (kube-proxy needs enough inotify instances):
    `fs.inotify.max_user_instances=512`, `fs.inotify.max_user_watches=524288`.
+   Skipped on macOS — Docker Desktop's Linux VM manages these limits.
 2. `docker compose --profile blob up -d` — Postgres, Kafka, Kafka UI, ClickHouse, **MinIO**.
-3. `skaffold run` — build images + apply manifests.
-4. `kubectl get pods` for `mrun-apps`, `mrun-system`, `mrun-security`.
+3. `make monitoring` — Helm install of kube-prometheus-stack + Grafana/Loki/Tempo/Fluent Bit
+   (skipped if the Helm release already exists).
+4. `skaffold run` — build images + apply manifests.
+5. `kubectl get pods` for `mrun-apps`, `mrun-system`, `mrun-security`, `mrun-monitoring`.
 
 ### Manual sequence
 
 ```bash
-# 1. host sysctl (required once per reboot; the script writes /etc/sysctl.d/99-kind.conf)
+# 0. create the kind cluster + its fixed docker network (once)
+./scripts/kind-up.sh
+
+# 1. host sysctl (Linux only, required once per reboot; the script writes /etc/sysctl.d/99-kind.conf)
 echo -e "fs.inotify.max_user_instances=512\nfs.inotify.max_user_watches=524288" \
   | sudo tee /etc/sysctl.d/99-kind.conf >/dev/null && sudo sysctl --system
 
 # 2. local infrastructure (blob profile adds MinIO)
 docker compose --profile blob up -d
 
-# 3. build + deploy to the cluster
+# 3. observability platform (Prometheus Operator, Grafana, Loki, Tempo, Fluent Bit)
+make monitoring
+
+# 4. build + deploy to the cluster
 skaffold run            # or: make deploy  (skaffold run -p prod)
 
-# 4. verify
-kubectl get pods -n mrun-apps -n mrun-system -n mrun-security
+# 5. verify
+kubectl get pods -n mrun-apps -n mrun-system -n mrun-security -n mrun-monitoring
 ```
 
-> The kind cluster is created from `kind-config.yaml` (name `mrun-face-platform`, so the context is
-> `kind-kind-mrun-face-platform`). It maps host `:80` → node `30080` and host `:443` → `30443`.
+### Image reuse & disk cleanup
+
+`skaffold.yaml` sets `build.tagPolicy.inputDigest`, so an image is tagged with a hash of its
+source + Dockerfile. Services that did not change keep their tag and Skaffold reuses the existing
+image instead of rebuilding all 11 on every run. Only changed services get a new image.
+
+`skaffold dev` is different: it watches the tree and rebuilds + redeploys every service whose files
+changed on each save, and it leaves every built image behind. Stop it (`Ctrl+C`) when you are done
+rather than leaving it running in a background terminal.
+
+To reclaim disk space after experimenting:
+
+```bash
+./scripts/docker-clean.sh
+```
+
+It removes stopped containers, dangling images, human-tagged `mrun/*` images (git SHA, `-dirty`)
+that no pod is using, and build cache older than 7 days. Digest-tagged images — the ones Skaffold
+reuses — are kept, so the next `skaffold run` still starts from cache. `./scripts/docker-clean.sh
+--deep` also removes unused digest images; it frees more space but makes the next run rebuild all
+services.
+
+> The kind cluster is created from `kind-config.yaml` via `./scripts/kind-up.sh` (name
+> `mrun-face-platform`, so the context is `kind-mrun-face-platform`). The script pre-creates the
+> `kind` docker network with the fixed `172.19.0.0/16` subnet so the external-services Endpoints
+> (`172.19.0.1`) stay valid; run it before the first `skaffold run`. It maps host `:80` → node
+> `30080` and host `:443` → `30443`.
 
 ### Accessing the gateway in a browser
 
@@ -696,7 +739,7 @@ sync ML/data-plane contracts go through `@mrun/proto`.
 
 | Step       | What to do                                                                                                                                                         |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1. Code    | Add the code under `apps/<svc>/`. Reuse `@mrun/common`, `@mrun/ddd`, `@mrun/events`, `@mrun/proto` instead of duplicating logic or importing another app.          |
+| 1. Code    | Add the code under `apps/<svc>/`. Reuse `@mrun/contracts`, `@mrun/events`, `@mrun/proto` instead of duplicating logic or importing another app.          |
 | 2. Events  | Need async fan-out? Reuse a topic from `packages/events/topics/kafka-topics.ts` or add a new constant there (plus a consumer group in `consumer-groups.ts`).       |
 | 3. gRPC    | Need a sync data-plane call? Add/modify a `.proto` in `packages/proto` and run `make proto` to regenerate stubs.                                                   |
 | 4. Config  | New env var? Add it to `.env.example` (committed) **and** to `infrastructure/apps/<svc>/configmap.yaml` (or `secret.yaml` for credentials).                        |

@@ -5,7 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users-service/users.module';
 import { ProxyModule } from './proxy/proxy.module';
-import { SecurityModule } from './auth/security.module';
+import { SecurityModule } from './auth-service/security.module';
 
 @Module({
   imports: [

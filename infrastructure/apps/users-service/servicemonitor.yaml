@@ -3,17 +3,22 @@ kind: ServiceMonitor
 
 metadata:
   name: users-service
+  namespace: mrun-apps
+  labels:
+    app.kubernetes.io/name: users-service
+    app.kubernetes.io/part-of: mrun-platform
+
 spec:
-
   selector:
-
     matchLabels:
-      app: users-service
+      app.kubernetes.io/name: users-service
+
+  namespaceSelector:
+    matchNames:
+      - mrun-apps
 
   endpoints:
-
     - port: http
-
       path: /metrics
-
       interval: 30s
+      scrapeTimeout: 10s

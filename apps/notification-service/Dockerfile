@@ -5,21 +5,25 @@ WORKDIR /repo
 RUN corepack enable
 COPY package.json pnpm-workspace.yaml ./
 COPY packages/events/package.json packages/events/
+COPY packages/observability/package.json packages/observability/
 COPY apps/notification-service/package.json apps/notification-service/
 RUN pnpm install --no-frozen-lockfile --filter notification-service...
 COPY tsconfig.base.json ./
 COPY packages/events packages/events
+COPY packages/observability packages/observability
 COPY apps/notification-service apps/notification-service
-RUN pnpm --filter @mrun/events build && pnpm --filter notification-service build
+RUN pnpm --filter @mrun/events build && pnpm --filter @mrun/observability build && pnpm --filter notification-service build
 
 FROM node:22-alpine AS production
 WORKDIR /repo
 RUN corepack enable
 COPY package.json pnpm-workspace.yaml ./
 COPY packages/events/package.json packages/events/
+COPY packages/observability/package.json packages/observability/
 COPY apps/notification-service/package.json apps/notification-service/
 RUN pnpm install --no-frozen-lockfile --prod --filter notification-service...
 COPY --from=build /repo/packages/events packages/events
+COPY --from=build /repo/packages/observability packages/observability
 COPY --from=build /repo/apps/notification-service/dist apps/notification-service/dist
 WORKDIR /repo/apps/notification-service
 EXPOSE 3004

@@ -1,7 +1,7 @@
 @baseUrl = http://localhost:3000
 
 ### Get users
-GET http://localhost:5123/users
+GET http://localhost/users
 Content-Type: application/json
 
 
