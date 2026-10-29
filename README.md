@@ -348,12 +348,18 @@ flowchart TB
 | **Consul**    | `hashicorp/consul:1.21`                              | `mrun-system`     | Service discovery + UI                                   |
 | **Keycloak**  | `quay.io/keycloak/keycloak:26.0.2`                   | `mrun-security`   | OIDC / identity provider (shares Postgres DB `keycloak`) |
 | **Grafana**   | `grafana/grafana:11.5.2`                             | `mrun-monitoring` | Dashboards (provisioned)                                 |
+| **Prometheus** | `prom/prometheus:v2.55.1`                           | `mrun-monitoring` | Cluster metrics store (7-day retention)                  |
+| **kube-state-metrics** | `bitnamilegacy/kube-state-metrics:2.14.0`    | `mrun-monitoring` | Kubernetes object/pod/deployment metrics                 |
+| **node-exporter** | `prom/node-exporter:v1.8.2`                      | `mrun-monitoring` | Node CPU, memory, filesystem, network metrics            |
 | **Reflector** | `emberstack/kubernetes-reflector:10.0.65`            | `mrun-system`     | Syncs Secrets/ConfigMaps between namespaces              |
 
-> **Note:** Grafana's provisioned datasources reference `prometheus-operated.monitoring:9090`,
-> `loki.monitoring:3100` and `tempo.monitoring:3200`. No Prometheus/Loki/Tempo operator is currently
-> installed in this setup, so those datasources have no backend yet; Grafana itself runs fine and the
-> dashboards are provisioned.
+> **Observability:** Grafana's Prometheus datasource points at
+> `prometheus.mrun-monitoring.svc.cluster.local:9090`. The provisioned **MRUN Platform Overview**
+> dashboard covers nodes, namespaces, pods, deployments, statefulsets, daemonsets, CPU, memory,
+> network, restarts, services, and PVCs, with `namespace`, `pod`, `node`, `service`, and `interval`
+> variables. Logs and traces are intentionally **not** provisioned; add Loki/Tempo later if needed.
+> Open Grafana with `kubectl -n mrun-monitoring port-forward svc/grafana 3000:3000` (credentials in
+> `grafana-secret`); Prometheus is available the same way on port `9090`.
 
 ### The external-services bridge (why it exists)
 
