@@ -3,18 +3,22 @@ kind: ServiceMonitor
 
 metadata:
   name: cards-service
+  namespace: mrun-apps
+  labels:
+    app.kubernetes.io/name: cards-service
+    app.kubernetes.io/part-of: mrun-platform
 
 spec:
-
   selector:
-
     matchLabels:
-      app: cards-service
+      app.kubernetes.io/name: cards-service
+
+  namespaceSelector:
+    matchNames:
+      - mrun-apps
 
   endpoints:
-
     - port: http
-
       path: /metrics
-
       interval: 30s
+      scrapeTimeout: 10s

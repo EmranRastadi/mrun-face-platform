@@ -12,6 +12,12 @@ echo "Deploying mrun-face-platform to ${ENVIRONMENT} environment..."
 echo "Building Docker images..."
 pnpm install:all
 
+# Monitoring platform (Helm) is separate from the kustomize-applied workloads.
+if ! helm status kube-prometheus-stack -n mrun-monitoring >/dev/null 2>&1; then
+  echo "Installing monitoring stack..."
+  ./install-monitoring.sh
+fi
+
 # Apply Kubernetes manifests
 echo "Applying Kubernetes manifests..."
 cd infrastructure

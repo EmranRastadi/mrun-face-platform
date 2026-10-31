@@ -250,7 +250,7 @@ services:
 #   build:
 #     context: ./apps/cards-service
 #     dockerfile: Dockerfile
-#   container_name: mrun-cards
+#   container_name: cards-service
 #   ports:
 #     - "8000:8000"
 #   env_file:

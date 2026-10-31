@@ -28,3 +28,7 @@ data:
 
   NOTIFY_RATE_LIMIT_PER_MINUTE: "30"
   NOTIFY_DEDUPE_TTL_SECONDS: "300"
+
+  OTEL_ENABLED: "true"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo.mrun-monitoring.svc.cluster.local:4318"
+  OTEL_SERVICE_NAME: "notification-service"

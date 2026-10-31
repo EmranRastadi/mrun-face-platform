@@ -3,18 +3,22 @@ kind: ServiceMonitor
 
 metadata:
   name: api-gateway
+  namespace: mrun-apps
+  labels:
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/part-of: mrun-platform
 
 spec:
-
   selector:
-
     matchLabels:
       app.kubernetes.io/name: api-gateway
 
+  namespaceSelector:
+    matchNames:
+      - mrun-apps
+
   endpoints:
-
     - port: http
-
       path: /metrics
-
       interval: 30s
+      scrapeTimeout: 10s

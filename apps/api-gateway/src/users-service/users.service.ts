@@ -1,7 +1,9 @@
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosResponse, Method } from 'axios';
 import { ConfigService } from '@nestjs/config';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { UserCreateDto } from './dto/user-create.dto';
+import { UserUpdateDto } from './dto/user-update.dto';
+import { UserRoleUpdateDto } from './dto/user-role-update.dto';
 
 @Injectable()
 export class UsersService {
@@ -20,40 +22,63 @@ export class UsersService {
     }
   }
 
-  async getUsers() {
+  private authHeaders(authorization?: string) {
+    return authorization ? { authorization } : undefined;
+  }
+
+  private async request(
+    method: Method,
+    path: string,
+    authorization?: string,
+    data?: unknown,
+  ) {
     this.ensureConfigured();
     try {
-      const users: AxiosResponse<any, any> = await axios(
-        `${this.userBaseUrl}/users`,
-        { method: 'GET', timeout: 5000 },
+      const response: AxiosResponse<unknown, unknown> = await axios(
+        `${this.userBaseUrl}${path}`,
+        {
+          method,
+          data,
+          timeout: 5000,
+          headers: this.authHeaders(authorization),
+        },
       );
-      return { results: users.data as unknown };
+      return { results: response.data };
     } catch (err) {
+      const status = axios.isAxiosError(err) ? err.response?.status : undefined;
+      const body = axios.isAxiosError(err) ? err.response?.data : undefined;
       this.logger.error(
-        `GET /users upstream failed: ${(err as Error).message}`,
+        `${method} ${path} upstream failed: ${(err as Error).message}`,
       );
       throw new HttpException(
-        'users-service unavailable',
-        HttpStatus.BAD_GATEWAY,
+        (body as Record<string, unknown> | string | undefined) ??
+          'users-service unavailable',
+        status ?? HttpStatus.BAD_GATEWAY,
       );
     }
   }
-  async createUser(body: UserCreateDto) {
-    this.ensureConfigured();
-    try {
-      const users: AxiosResponse<any, any> = await axios(
-        `${this.userBaseUrl}/users`,
-        { method: 'POST', data: body, timeout: 5000 },
-      );
-      return { results: users.data as unknown };
-    } catch (err) {
-      this.logger.error(
-        `POST /users upstream failed: ${(err as Error).message}`,
-      );
-      throw new HttpException(
-        'users-service unavailable',
-        HttpStatus.BAD_GATEWAY,
-      );
-    }
+
+  getUsers(authorization?: string) {
+    return this.request('GET', '/users', authorization);
+  }
+
+  createUser(body: UserCreateDto, authorization?: string) {
+    return this.request('POST', '/users', authorization, body);
+  }
+
+  getUser(id: number, authorization?: string) {
+    return this.request('GET', `/users/${id}`, authorization);
+  }
+
+  updateUser(id: number, body: UserUpdateDto, authorization?: string) {
+    return this.request('PATCH', `/users/${id}`, authorization, body);
+  }
+
+  updateRole(id: number, body: UserRoleUpdateDto, authorization?: string) {
+    return this.request('PATCH', `/users/${id}/role`, authorization, body);
+  }
+
+  async deleteUser(id: number, authorization?: string) {
+    await this.request('DELETE', `/users/${id}`, authorization);
   }
 }

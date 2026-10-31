@@ -23,7 +23,15 @@ data:
 
   KEYCLOAK_URL: "http://keycloak.mrun-security.svc.cluster.local:8080"
 
+  OTEL_ENABLED: "true"
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo.mrun-monitoring.svc.cluster.local:4318"
+  OTEL_SERVICE_NAME: "users-service"
+
+  #######################  START JWT ##########################
+  JWT_EXPIRES_IN: "7d"
+  JWT_ISSUER: "mrun-users-service"
+  JWT_AUDIENCE: "mrun-platform"
+  #######################  END JWT ##########################
 
   #######################  START POSTGRES ##########################
   DB_HOST: "postgresql.mrun-database.svc.cluster.local"

@@ -32,7 +32,7 @@ const ALLOWED_PROXY_TARGETS = new Set([
 const TARGET_SERVICE_NAME: Record<string, string> = {
   USERS_SERVICE_URL: 'users-service',
   ENROLLMENT_SERVICE_URL: 'enrollment-service',
-  CARDS_SERVICE_URL: 'mrun-cards',
+  CARDS_SERVICE_URL: 'cards-service',
   AUDIT_SERVICE_URL: 'audit-service',
   NOTIFICATION_SERVICE_URL: 'notification-service',
   ANALYTICS_SERVICE_URL: 'analytics-service',

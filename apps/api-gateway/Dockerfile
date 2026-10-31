@@ -1,31 +1,35 @@
-# ---------- Base ----------
-FROM node:22-alpine AS base
-WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm ci || npm install --no-audit --no-fund
+# Monorepo build (context = repository root).
+# Build: docker build -f apps/api-gateway/Dockerfile -t mrun/api-gateway .
+FROM node:22-alpine AS build
+WORKDIR /repo
+RUN corepack enable
+COPY package.json pnpm-workspace.yaml ./
+COPY packages/contracts/package.json packages/contracts/
+COPY packages/observability/package.json packages/observability/
+COPY apps/api-gateway/package.json apps/api-gateway/
+RUN pnpm install --no-frozen-lockfile --filter api-gateway...
+COPY tsconfig.base.json ./
+COPY packages/contracts packages/contracts
+COPY packages/observability packages/observability
+COPY apps/api-gateway apps/api-gateway
+RUN pnpm --filter @mrun/contracts build && pnpm --filter @mrun/observability build && pnpm --filter api-gateway build
 
-# ---------- Development ----------
-FROM base AS development
-COPY . .
-CMD ["npm", "run", "start:dev"]
-
-# ---------- Build ----------
-FROM base AS build
-COPY . .
-RUN npm run build
-
-# ---------- Production ----------
 FROM node:22-alpine AS production
-WORKDIR /app
-ENV NODE_ENV=production
-COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev --ignore-scripts || npm install --omit=dev --no-audit --no-fund \
-  && npm cache clean --force
-COPY --from=build /app/dist ./dist
+WORKDIR /repo
+RUN corepack enable
+COPY package.json pnpm-workspace.yaml ./
+COPY packages/contracts/package.json packages/contracts/
+COPY packages/observability/package.json packages/observability/
+COPY apps/api-gateway/package.json apps/api-gateway/
+RUN pnpm install --no-frozen-lockfile --prod --filter api-gateway...
+COPY --from=build /repo/packages/contracts packages/contracts
+COPY --from=build /repo/packages/observability packages/observability
+COPY --from=build /repo/apps/api-gateway/dist apps/api-gateway/dist
+WORKDIR /repo/apps/api-gateway
 
 # Best practice: non-root + minimal surface.
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup \
-  && chown -R appuser:appgroup /app
+  && chown -R appuser:appgroup /repo
 USER appuser
 
 EXPOSE 3000

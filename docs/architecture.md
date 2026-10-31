@@ -7,8 +7,8 @@ Monorepo: `apps/*` (deployables) + `packages/*` (shared) + `infrastructure/*` (K
 | Service | Lang | Port | DB / Store | Talks via |
 |---|---|---|---|---|
 | api-gateway | NestJS | 3000 | stateless | REST in, HTTP out |
-| users-service | NestJS | 3001 | Postgres `users-db` | REST + Kafka `user.events` |
-| identity-service | NestJS | 3002 | Keycloak / Postgres | REST + JWT |
+| users-service | NestJS | 3001 | Postgres `users-db` | REST + JWT issuance + Kafka `user.events` |
+| identity-service | NestJS | 3002 | Keycloak / Postgres | REST + Keycloak integration |
 | cards-service | FastAPI | 8000 | Postgres `cards-db` | REST + `card.events` |
 | camera-service | FastAPI | 8000 | — (edge ingest) | gRPC `camera.proto` + `camera.events` |
 | similarity-service | FastAPI | 8000 | Milvus | gRPC `similarity.proto` + `embedding.events` |
@@ -32,8 +32,7 @@ Monorepo: `apps/*` (deployables) + `packages/*` (shared) + `infrastructure/*` (K
 
 ## Shared packages
 
-- `@mrun/common` — Result, pagination, health, logging helpers.
-- `@mrun/ddd` — Entity, ValueObject, AggregateRoot, Repository.
+- `@mrun/contracts` — dependency-free shapes shared by the NestJS services: `Role`, JWT claims, user payload interfaces, pagination types.
 - `@mrun/events` — Kafka topic constants + `BaseEvent` envelope.
 - `@mrun/proto` — `cards|camera|similarity.proto`, generated via `buf`.
 
@@ -43,4 +42,6 @@ Monorepo: `apps/*` (deployables) + `packages/*` (shared) + `infrastructure/*` (K
 2. All cross-service async goes through Kafka topics in `packages/events`.
 3. All sync ML/data-plane contracts go through `packages/proto`.
 4. One writer per store; Postgres is truth, others derived.
+5. Auth: `users-service` issues HS256 JWTs; `api-gateway` and `cards-service` verify them and
+   enforce `admin` / `operator` / `viewer` roles.
 5. Env: `.env.example` committed, `.env` never committed.

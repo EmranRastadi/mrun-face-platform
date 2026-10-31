@@ -1,5 +1,11 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+# kube-prometheus-stack (Prometheus Operator, Prometheus, kube-state-metrics,
+# node-exporter) is installed with Helm — see kube-prometheus-stack/README.md
+# and infrastructure/scripts/install-monitoring.sh.
 resources:
   - grafana
+  - loki
+  - tempo
+  - fluent-bit
