@@ -297,6 +297,13 @@ is owned by a TypeORM migration (idempotent, safe on databases created by `synch
 
 ---
 
+#### Entitlements (plans, subscriptions, entitlements)
+- `entitlements-service` owns plans, features, subscriptions, overrides and usage.
+- Resolution precedence: audited override → robot subscription → org subscription → default plan → deny.
+- Endpoints: `/plans`, `/features`, `/subscriptions`, `/robot-subscriptions`,
+  `/entitlement-overrides`, `/entitlements`. See `docs/entitlements.md`.
+
+
 ## 6. Shared packages
 
 | Package           | npm name       | Contents                                                                      |

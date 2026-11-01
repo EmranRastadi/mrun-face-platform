@@ -7,6 +7,7 @@ import { NotificationProxyController } from './notification.controller';
 import { AuthProxyController } from './auth.controller';
 import { CardsProxyController } from './cards.controller';
 import { IamProxyController } from './iam.controller';
+import { EntitlementsProxyController } from './entitlements.controller';
 
 @Module({
   controllers: [
@@ -17,6 +18,7 @@ import { IamProxyController } from './iam.controller';
     AuthProxyController,
     CardsProxyController,
     IamProxyController,
+    EntitlementsProxyController,
   ],
   providers: [ProxyService],
   exports: [ProxyService],

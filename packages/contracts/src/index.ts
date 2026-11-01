@@ -6,3 +6,4 @@ export * from './pagination';
 export * from './organizations';
 export * from './rbac';
 export * from './authz';
+export * from './entitlements';

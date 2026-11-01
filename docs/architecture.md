@@ -49,3 +49,5 @@ Monorepo: `apps/*` (deployables) + `packages/*` (shared) + `infrastructure/*` (K
 6. Schema: `synchronize` is development-only (`DB_SYNCHRONIZE`); production runs TypeORM
    migrations (`DB_MIGRATIONS_RUN`), one migration owner per database.
 7. Env: `.env.example` committed, `.env` never committed.
+
+- `entitlements-service` (NestJS 3000): plans, subscriptions, entitlement resolution (PDP via users-service). See `docs/entitlements.md`.

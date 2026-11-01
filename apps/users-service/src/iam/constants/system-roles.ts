@@ -57,6 +57,7 @@ export const SYSTEM_ROLES: SystemRoleDefinition[] = [
       'platform.units:manage',
       'partners:read',
       'partners:manage',
+      'plans:read',
       'plans:manage',
       'subscriptions:read',
       'subscriptions:manage',
@@ -89,6 +90,7 @@ export const SYSTEM_ROLES: SystemRoleDefinition[] = [
       'organizations:read',
       'organizations:manage',
       'partners:read',
+      'plans:read',
       'plans:manage',
       'subscriptions:read',
       'subscriptions:manage',
@@ -104,6 +106,7 @@ export const SYSTEM_ROLES: SystemRoleDefinition[] = [
     tier: 'platform' as PermissionTier,
     permissions: platform([
       'organizations:read',
+      'plans:read',
       'subscriptions:read',
       'subscriptions:manage',
       'usage:read',
@@ -117,6 +120,7 @@ export const SYSTEM_ROLES: SystemRoleDefinition[] = [
     tier: 'platform' as PermissionTier,
     permissions: platform([
       'organizations:read',
+      'plans:read',
       'subscriptions:read',
       'usage:read',
     ]),

@@ -20,6 +20,7 @@ import { ConsulService } from '../consul';
  */
 const ALLOWED_PROXY_TARGETS = new Set([
   'USERS_SERVICE_URL',
+  'ENTITLEMENTS_SERVICE_URL',
   'ENROLLMENT_SERVICE_URL',
   'CARDS_SERVICE_URL',
   'AUDIT_SERVICE_URL',
@@ -31,6 +32,7 @@ const ALLOWED_PROXY_TARGETS = new Set([
 // Maps a proxy env key to the service name registered in Consul.
 const TARGET_SERVICE_NAME: Record<string, string> = {
   USERS_SERVICE_URL: 'users-service',
+  ENTITLEMENTS_SERVICE_URL: 'entitlements-service',
   ENROLLMENT_SERVICE_URL: 'enrollment-service',
   CARDS_SERVICE_URL: 'cards-service',
   AUDIT_SERVICE_URL: 'audit-service',

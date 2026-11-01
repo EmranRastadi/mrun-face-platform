@@ -37,6 +37,7 @@ export const PERMISSION_CATALOG: PermissionDefinition[] = [
   p('platform.units:manage', 'platform.units', 'manage', 'Manage platform departments and teams', PLATFORM),
   p('partners:read', 'partners', 'read', 'View partner organizations', PLATFORM),
   p('partners:manage', 'partners', 'manage', 'Manage partner organizations and contracts', PLATFORM),
+  p('plans:read', 'plans', 'read', 'View commercial plans and features', PLATFORM),
   p('plans:manage', 'plans', 'manage', 'Create and version commercial plans', PLATFORM),
   p('subscriptions:manage', 'subscriptions', 'manage', 'Create, change and cancel subscriptions', PLATFORM),
   p('audit:export', 'audit', 'export', 'Export audit records', PLATFORM),

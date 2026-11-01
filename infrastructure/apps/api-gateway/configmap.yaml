@@ -25,6 +25,7 @@ data:
   JWT_AUDIENCE: "mrun-platform"
 
   USERS_SERVICE_URL: "http://users-service:3000"
+  ENTITLEMENTS_SERVICE_URL: "http://entitlements-service:3000"
   CARDS_SERVICE_URL: "http://cards-service:3000"
   ORDERS_SERVICE_URL: "http://orders-service:3000"
   ENROLLMENT_SERVICE_URL: "http://enrollment-service.mrun-apps.svc.cluster.local:8001"
