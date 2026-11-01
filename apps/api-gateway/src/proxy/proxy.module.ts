@@ -4,6 +4,10 @@ import { EnrollmentProxyController } from './enrollment.controller';
 import { AnalyticsProxyController } from './analytics.controller';
 import { AuditProxyController } from './audit.controller';
 import { NotificationProxyController } from './notification.controller';
+import { AuthProxyController } from './auth.controller';
+import { CardsProxyController } from './cards.controller';
+import { IamProxyController } from './iam.controller';
+import { EntitlementsProxyController } from './entitlements.controller';
 
 @Module({
   controllers: [
@@ -11,6 +15,10 @@ import { NotificationProxyController } from './notification.controller';
     AnalyticsProxyController,
     AuditProxyController,
     NotificationProxyController,
+    AuthProxyController,
+    CardsProxyController,
+    IamProxyController,
+    EntitlementsProxyController,
   ],
   providers: [ProxyService],
   exports: [ProxyService],

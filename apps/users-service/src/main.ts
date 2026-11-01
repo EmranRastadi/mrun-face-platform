@@ -1,3 +1,5 @@
+import './tracing';
+import { createMetrics } from '@mrun/observability';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
@@ -20,6 +22,11 @@ async function bootstrap() {
   
 
   const app = await NestFactory.create(AppModule, { logger });
+
+  // Prometheus metrics (scraped through the ServiceMonitor on port `http`).
+  const metrics = createMetrics('users-service');
+  app.use(metrics.middleware);
+  app.getHttpAdapter().get('/metrics', metrics.handler);
 
   app.enableShutdownHooks();
   // Global Pipes

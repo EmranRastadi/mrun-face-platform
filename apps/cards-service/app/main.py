@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 import os
 import time
 import httpx
@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 from .config import settings
 from .models import ServiceInfo, HealthStatus, ServiceResponse, Card
 from .utils import get_logger, consul_client
+from .observability import setup_observability
+from .auth import CurrentUser, Role, get_current_user, require_roles
 
 logger = get_logger(__name__)
 START_TIME = time.time()
@@ -48,6 +50,8 @@ app = FastAPI(
     description="Service for managing cards",
     lifespan=lifespan
 )
+
+setup_observability(app, settings.service_name, settings.service_version)
 
 # ==================== API Endpoints ====================
 
@@ -91,7 +95,9 @@ async def service_info():
     )
 
 @app.get("/services")
-async def get_all_services():
+async def get_all_services(
+    _user: CurrentUser = Depends(require_roles(Role.ADMIN)),
+):
     if not settings.consul_enabled:
         raise HTTPException(status_code=503, detail="Consul is disabled")
     
@@ -108,7 +114,10 @@ async def get_all_services():
     )
 
 @app.get("/service/{service_name}")
-async def get_service(service_name: str):
+async def get_service(
+    service_name: str,
+    _user: CurrentUser = Depends(require_roles(Role.ADMIN)),
+):
     if not settings.consul_enabled:
         raise HTTPException(status_code=503, detail="Consul is disabled")
     
@@ -125,14 +134,18 @@ async def get_service(service_name: str):
     )
 
 @app.get("/call/{service_name}")
-async def call_service(service_name: str, path: str = ""):
+async def call_service(
+    service_name: str,
+    path: str = "",
+    _user: CurrentUser = Depends(require_roles(Role.ADMIN)),
+):
     """Call another service via Consul discovery.
 
     Restricted to an explicit allowlist to avoid turning the
     service into an open proxy (SSRF). Path is sanitized to a
     relative path only.
     """
-    allowed = {"mrun-users", "mrun-cards", "mrun-enrollment", "users-service", "cards-service", "enrollment-service"}
+    allowed = {"mrun-users", "mrun-enrollment", "users-service", "cards-service", "enrollment-service"}
     if service_name not in allowed:
         raise HTTPException(status_code=403, detail=f"Service '{service_name}' is not in the allowlist")
     if not settings.consul_enabled:
@@ -174,7 +187,10 @@ cards_db: List[Card] = []
 next_id = 1
 
 @app.post("/cards", status_code=201)
-async def create_card(card: Card):
+async def create_card(
+    card: Card,
+    _user: CurrentUser = Depends(require_roles(Role.ADMIN, Role.OPERATOR)),
+):
     global next_id
     card.id = next_id
     now = datetime.now(timezone.utc)
@@ -191,7 +207,9 @@ async def create_card(card: Card):
     )
 
 @app.get("/cards")
-async def get_cards():
+async def get_cards(
+    _user: CurrentUser = Depends(get_current_user),
+):
     return ServiceResponse(
         success=True,
         message="All cards",
@@ -201,7 +219,10 @@ async def get_cards():
     )
 
 @app.get("/cards/{card_id}")
-async def get_card(card_id: int):
+async def get_card(
+    card_id: int,
+    _user: CurrentUser = Depends(get_current_user),
+):
     for card in cards_db:
         if card.id == card_id:
             return ServiceResponse(

@@ -5,9 +5,12 @@ WORKDIR /app
 COPY requirements.txt pyproject.toml ./
 COPY wheels/ ./wheels/
 # Offline-friendly: wheels are vendored in ./wheels (see README "vendored wheels").
-# Falls back to PyPI only for anything missing from the vendored dir.
-RUN pip install --no-cache-dir --no-index --find-links=./wheels -r requirements.txt \
- || pip install --no-cache-dir -r requirements.txt; rm -rf ./wheels
+# --find-links lets pip use the vendored dir and fall back to PyPI for anything
+# missing or built for another platform (e.g. x86_64 wheels on an arm64 Mac).
+# Keep this as a single && chain so a failed install fails the build instead of
+# silently producing an image without dependencies.
+RUN pip install --no-cache-dir --retries 10 --timeout 120 --find-links=./wheels -r requirements.txt \
+ && rm -rf ./wheels
 
 COPY src/ ./src/
 

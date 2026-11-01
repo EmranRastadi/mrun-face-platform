@@ -28,6 +28,19 @@ spec:
       securityContext:
         fsGroup: 1000
 
+      initContainers:
+        - name: wait-for-consul
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until wget -q -O- http://consul.mrun-system.svc.cluster.local:8500/v1/status/leader; do
+                echo "Waiting for Consul..."
+                sleep 2
+              done
+              echo "Consul is ready!"
+
       containers:
         - name: similarity-service
           image: mrun/similarity-service

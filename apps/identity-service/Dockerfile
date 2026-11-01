@@ -1,25 +1,31 @@
-FROM node:22-alpine AS base
-WORKDIR /app
-COPY package.json pnpm-lock.yaml* ./
+# Monorepo build (context = repository root).
+# Build: docker build -f apps/identity-service/Dockerfile -t mrun/identity-service .
+FROM node:22-alpine AS build
+WORKDIR /repo
 RUN corepack enable
-RUN pnpm config set ignore-scripts true && pnpm install --no-frozen-lockfile
-COPY . .
+COPY package.json pnpm-workspace.yaml ./
+COPY packages/observability/package.json packages/observability/
+COPY apps/identity-service/package.json apps/identity-service/
+RUN pnpm install --no-frozen-lockfile --filter identity-service...
+COPY tsconfig.base.json ./
+COPY packages/observability packages/observability
+COPY apps/identity-service apps/identity-service
+RUN pnpm --filter @mrun/observability build && pnpm --filter identity-service build
 
-# ---------- Build ----------
-FROM base AS build
-RUN pnpm build
-
-# ---------- Production ----------
 FROM node:22-alpine AS production
-WORKDIR /app
-ENV NODE_ENV=production
+WORKDIR /repo
 RUN corepack enable
-COPY package.json pnpm-lock.yaml* ./
-RUN pnpm config set ignore-scripts true && pnpm install --prod --no-frozen-lockfile
-COPY --from=build /app/dist ./dist
+COPY package.json pnpm-workspace.yaml ./
+COPY packages/observability/package.json packages/observability/
+COPY apps/identity-service/package.json apps/identity-service/
+RUN pnpm install --no-frozen-lockfile --prod --filter identity-service...
+COPY --from=build /repo/packages/observability packages/observability
+COPY --from=build /repo/apps/identity-service/dist apps/identity-service/dist
+WORKDIR /repo/apps/identity-service
 
+# Best practice: non-root + minimal surface.
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup \
-  && chown -R appuser:appgroup /app
+  && chown -R appuser:appgroup /repo
 USER appuser
 
 EXPOSE 3000

@@ -37,3 +37,7 @@ data:
   MILVUS_COLLECTION: "face_embeddings"
   MILVUS_DIMENSION: "512"
   #######################  END MILVUS ##########################
+
+  OTEL_ENABLED: "true"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo.mrun-monitoring.svc.cluster.local:4318"
+  OTEL_SERVICE_NAME: "enrollment-service"

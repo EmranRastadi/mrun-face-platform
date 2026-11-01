@@ -5,6 +5,7 @@ resources:
   - api-gateway
   - cards-service
   - users-service
+  - entitlements-service
   - identity-service
   - camera-service
   - similarity-service

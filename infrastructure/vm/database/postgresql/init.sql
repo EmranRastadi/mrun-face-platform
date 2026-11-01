@@ -7,16 +7,19 @@ CREATE DATABASE cards;
 CREATE DATABASE enrollment;
 CREATE DATABASE identity;
 CREATE DATABASE audit;
+CREATE DATABASE entitlements;
 CREATE DATABASE keycloak;
 
 CREATE USER users WITH PASSWORD '123456';
 CREATE USER cards_user WITH PASSWORD '123456';
 CREATE USER enrollment WITH PASSWORD 'change-me';
+CREATE USER entitlements WITH PASSWORD 'change-me';
 CREATE USER keycloak WITH PASSWORD 'keycloak';
 
 GRANT ALL PRIVILEGES ON DATABASE users TO users;
 GRANT ALL PRIVILEGES ON DATABASE cards TO cards_user;
 GRANT ALL PRIVILEGES ON DATABASE enrollment TO enrollment;
+GRANT ALL PRIVILEGES ON DATABASE entitlements TO entitlements;
 GRANT ALL PRIVILEGES ON DATABASE keycloak TO keycloak;
 
 \connect users
@@ -30,6 +33,10 @@ ALTER SCHEMA public OWNER TO cards_user;
 \connect enrollment
 GRANT ALL ON SCHEMA public TO enrollment;
 ALTER SCHEMA public OWNER TO enrollment;
+
+\connect entitlements
+GRANT ALL ON SCHEMA public TO entitlements;
+ALTER SCHEMA public OWNER TO entitlements;
 
 \connect keycloak
 GRANT ALL ON SCHEMA public TO keycloak;

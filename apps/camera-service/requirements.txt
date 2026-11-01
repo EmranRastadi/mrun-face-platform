@@ -1,2 +1,6 @@
 fastapi
 uvicorn[standard]
+prometheus-fastapi-instrumentator
+opentelemetry-sdk
+opentelemetry-exporter-otlp-proto-http
+opentelemetry-instrumentation-fastapi

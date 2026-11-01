@@ -7,7 +7,9 @@ metadata:
   annotations:
     consul.hashicorp.com/service-name: audit-service
     consul.hashicorp.com/service-port: "3003"
-
+  labels:
+    app.kubernetes.io/name: audit-service
+    app.kubernetes.io/part-of: mrun-platform
 spec:
   selector:
     app.kubernetes.io/name: audit-service

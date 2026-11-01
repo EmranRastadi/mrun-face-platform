@@ -53,7 +53,15 @@ data:
   CONSUL_HOST: consul.mrun-system.svc.cluster.local
   CONSUL_PORT: "8500"
   CONSUL_ENABLED: "true"
-  SERVICE_NAME: "mrun-cards"
+  SERVICE_NAME: "cards-service"
+
+  ####################################
+  # JWT
+  ####################################
+
+  JWT_ALGORITHM: "HS256"
+  JWT_ISSUER: "mrun-users-service"
+  JWT_AUDIENCE: "mrun-platform"
 
   ####################################
   # Internal Services
@@ -62,3 +70,7 @@ data:
   CAMERA_SERVICE_URL: http://camera-service.mrun-apps.svc.cluster.local:8000
 
   SIMILARITY_SERVICE_URL: http://similarity-service.mrun-apps.svc.cluster.local:8000
+
+  OTEL_ENABLED: "true"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo.mrun-monitoring.svc.cluster.local:4318"
+  OTEL_SERVICE_NAME: "cards-service"

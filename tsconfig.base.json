@@ -20,10 +20,8 @@
     "noImplicitAny": false,
     "baseUrl": ".",
     "paths": {
-      "@mrun/common": ["packages/common/src"],
-      "@mrun/common/*": ["packages/common/src/*"],
-      "@mrun/ddd": ["packages/DDD/src"],
-      "@mrun/ddd/*": ["packages/DDD/src/*"],
+      "@mrun/contracts": ["packages/contracts/src"],
+      "@mrun/contracts/*": ["packages/contracts/src/*"],
       "@mrun/events": ["packages/events/src"],
       "@mrun/events/*": ["packages/events/src/*"],
       "@mrun/proto": ["packages/proto/gen/ts"]

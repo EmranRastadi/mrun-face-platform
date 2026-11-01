@@ -1,0 +1,91 @@
+# kube-prometheus-stack — MRUN platform values
+#
+# Installed by `infrastructure/scripts/install-monitoring.sh` (or `make monitoring`).
+# Grafana and Alertmanager are disabled on purpose:
+#   * Grafana is managed as plain manifests in infrastructure/platform/monitoring/grafana
+#     so dashboards stay in git and kustomize remains the source of truth.
+#   * Alerting is out of scope for this platform today.
+grafana:
+  enabled: false
+
+alertmanager:
+  enabled: false
+
+prometheus:
+  prometheusSpec:
+    retention: 7d
+
+    # Select ServiceMonitors/PodMonitors from every namespace, without requiring
+    # the `release: kube-prometheus-stack` label.
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 20Gi
+
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 2Gi
+
+# kind runs control-plane components on the host network; scraping them only
+# produces permanently-down targets.
+kubeEtcd:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+prometheusOperator:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+kube-state-metrics:
+  # registry.k8s.io is not reachable from this environment; use the Docker Hub
+  # mirror that was already in use before the operator migration.
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/kube-state-metrics
+    tag: 2.14.0
+    registry: docker.io
+    repository: bitnamilegacy/kube-state-metrics
+    tag: 2.14.0
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+prometheus-node-exporter:
+  image:
+    registry: docker.io
+    repository: prom/node-exporter
+    tag: v1.8.2
+    distroless: false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi

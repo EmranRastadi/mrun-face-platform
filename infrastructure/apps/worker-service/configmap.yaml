@@ -15,3 +15,7 @@ data:
 
   KAFKA_BROKERS: "kafka.mrun-messaging.svc.cluster.local:9092"
   KAFKA_ENABLED: "true"
+
+  OTEL_ENABLED: "true"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo.mrun-monitoring.svc.cluster.local:4318"
+  OTEL_SERVICE_NAME: "worker-service"

@@ -4,3 +4,8 @@ httpx
 pydantic
 pydantic-settings
 python-consul
+PyJWT
+prometheus-fastapi-instrumentator
+opentelemetry-sdk
+opentelemetry-exporter-otlp-proto-http
+opentelemetry-instrumentation-fastapi

@@ -7,7 +7,9 @@ metadata:
   annotations:
     consul.hashicorp.com/service-name: camera-service
     consul.hashicorp.com/service-port: "8000"
-
+  labels:
+    app.kubernetes.io/name: camera-service
+    app.kubernetes.io/part-of: mrun-platform
 spec:
   selector:
     app.kubernetes.io/name: camera-service

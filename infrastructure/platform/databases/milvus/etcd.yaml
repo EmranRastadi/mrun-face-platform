@@ -33,6 +33,10 @@ metadata:
 
 spec:
   replicas: 1
+  # Single etcd backed by EmptyDir: never run two instances at once or the
+  # Service can route clients to two independent clusters during a rollout.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: etcd
@@ -56,6 +60,12 @@ spec:
               containerPort: 2379
             - name: peer
               containerPort: 2380
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 2379
+            initialDelaySeconds: 2
+            periodSeconds: 5
           volumeMounts:
             - name: data
               mountPath: /etcd

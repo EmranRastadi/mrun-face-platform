@@ -1,7 +1,8 @@
 import { IsString, IsEmail, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import type { UpdateUserPayload } from '@mrun/contracts';
 
-export class UpdateUserDto {
+export class UpdateUserDto implements UpdateUserPayload {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()

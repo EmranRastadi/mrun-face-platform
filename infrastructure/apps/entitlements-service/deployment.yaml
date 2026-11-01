@@ -1,0 +1,112 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: entitlements-service
+  namespace: mrun-apps
+  labels:
+    app.kubernetes.io/name: entitlements-service
+    app.kubernetes.io/part-of: mrun-platform
+    app.kubernetes.io/component: identity
+
+
+spec:
+  replicas: 1
+
+
+  strategy:
+    type: RollingUpdate
+
+#  We Say All Pods have name = entitlements-service those mine Pods
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: entitlements-service
+
+
+  template:
+#    From This Time All Of You Will make pods those name is entitlements-service
+    metadata:
+      labels:
+        app.kubernetes.io/name: entitlements-service
+        app.kubernetes.io/part-of: mrun-platform
+        app.kubernetes.io/component: identity
+    spec:
+
+      serviceAccountName: entitlements-service
+
+      securityContext:
+        fsGroup: 1000
+
+      initContainers:
+        - name: wait-for-consul
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until wget -q -O- http://consul.mrun-system.svc.cluster.local:8500/v1/status/leader; do
+                echo "Waiting for Consul..."
+                sleep 2
+              done
+              echo "Consul is ready!"
+
+      containers:
+
+        - name: entitlements-service
+
+          image: mrun/entitlements-service
+
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 3000
+
+          envFrom:
+
+            - configMapRef:
+                name: entitlements-service-config
+
+
+            - secretRef:
+                name: entitlements-service-secret
+
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          resources:
+
+            requests:
+              cpu: 100m
+              memory: 128Mi
+
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          # TODO be careful
+#          startupProbe:
+#
+#            httpGet:
+#              path: /health
+#              port: 3000
+#
+#            periodSeconds: 5
+#            failureThreshold: 30
+#
+#          readinessProbe:
+#
+#            httpGet:
+#              path: /health
+#              port: 3000
+#
+#            periodSeconds: 5
+#
+#          livenessProbe:
+#
+#            httpGet:
+#              path: /health
+#              port: 3000
+#
+#            periodSeconds: 10

@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: entitlements-service-config
+  namespace: mrun-apps
+
+data:
+  NODE_ENV: "production"
+
+  PORT: "3000"
+
+  SERVICE_NAME: "entitlements-service"
+
+  LOG_LEVEL: "info"
+
+  CONSUL_HOST: "consul.mrun-system.svc.cluster.local"
+  CONSUL_PORT: "8500"
+  CONSUL_ENABLED: "true"
+
+  KAFKA_BROKERS: "kafka.mrun-messaging.svc.cluster.local:9092"
+  KAFKA_CLIENT_ID: "entitlements-service"
+
+  KEYCLOAK_URL: "http://keycloak.mrun-security.svc.cluster.local:8080"
+
+  OTEL_ENABLED: "true"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo.mrun-monitoring.svc.cluster.local:4318"
+  OTEL_SERVICE_NAME: "entitlements-service"
+
+  #######################  START JWT ##########################
+  # Tokens are issued by users-service; verify them with the same secret and
+  # claims contract.
+  JWT_ISSUER: "mrun-users-service"
+  JWT_AUDIENCE: "mrun-platform"
+  #######################  END JWT ##########################
+
+  # Policy Decision Point used for permission checks on every request.
+  USERS_SERVICE_URL: "http://users-service:3000"
+
+  #######################  START POSTGRES ##########################
+  DB_HOST: "postgresql.mrun-database.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_USER: "entitlements"
+  DB_NAME: "entitlements"
+  # Schema is owned by migrations; synchronize must stay off outside local dev.
+  DB_SYNCHRONIZE: "false"
+  DB_MIGRATIONS_RUN: "true"
+  #######################  END POSTGRES ##########################

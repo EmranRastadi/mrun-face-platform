@@ -1,4 +1,4 @@
-.PHONY: install dev build test lint format proto clean up down deploy
+.PHONY: install dev build test lint format proto clean up down deploy monitoring monitoring-uninstall
 
 install:
 	pnpm install
@@ -28,6 +28,13 @@ clean:
 # Default `up` starts the core stack (Milvus/etcd are opt-in via the `vector` profile).
 up:
 	docker compose up -d
+
+# Observability platform (kube-prometheus-stack + Grafana/Loki/Tempo/Fluent Bit).
+monitoring:
+	./infrastructure/scripts/install-monitoring.sh
+
+monitoring-uninstall:
+	helm uninstall kube-prometheus-stack -n mrun-monitoring || true
 
 up-vector:
 	docker compose --profile vector up -d

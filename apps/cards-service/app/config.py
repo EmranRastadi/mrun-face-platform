@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    service_name: str = "mrun-cards"
+    service_name: str = "cards-service"
     service_version: str = "1.0.0"
     environment: str = "development"
     port: int = 8000
@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     kafka_enabled: bool = False
 
     keycloak_url: str = "http://keycloak.mrun-security.svc.cluster.local:8080"
+
+    jwt_secret: str = ""
+    jwt_algorithm: str = "HS256"
+    jwt_issuer: str = "mrun-users-service"
+    jwt_audience: str = "mrun-platform"
 
     class Config:
         env_file = ".env"

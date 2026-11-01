@@ -27,3 +27,7 @@ data:
   CLICKHOUSE_DATABASE: "mrun"
   CLICKHOUSE_ENABLED: "true"
   #######################  END CLICKHOUSE ##########################
+
+  OTEL_ENABLED: "true"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo.mrun-monitoring.svc.cluster.local:4318"
+  OTEL_SERVICE_NAME: "audit-service"

@@ -23,6 +23,30 @@ spec:
         app.kubernetes.io/part-of: mrun-platform
         app.kubernetes.io/component: vector-db
     spec:
+      initContainers:
+        - name: wait-for-etcd
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z etcd.mrun-system.svc.cluster.local 2379; do
+                echo "Waiting for etcd..."
+                sleep 2
+              done
+              echo "etcd is ready!"
+        - name: wait-for-minio
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z minio.mrun-system.svc.cluster.local 9000; do
+                echo "Waiting for MinIO..."
+                sleep 2
+              done
+              echo "MinIO is ready!"
+
       containers:
         - name: milvus
           image: milvusdb/milvus:v2.4.15

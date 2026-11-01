@@ -5,5 +5,5 @@ resources:
   - kafka
   - database
   - clickhouse
-  - minio
+#  - minio
 
