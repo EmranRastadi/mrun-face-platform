@@ -97,6 +97,9 @@ export class ProxyService {
           ...(req.headers.authorization
             ? { authorization: req.headers.authorization }
             : {}),
+          ...(typeof req.headers['x-org-id'] === 'string'
+            ? { 'x-org-id': req.headers['x-org-id'] }
+            : {}),
         },
         validateStatus: () => true,
       });

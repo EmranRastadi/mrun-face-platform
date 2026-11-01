@@ -7,7 +7,7 @@ Monorepo: `apps/*` (deployables) + `packages/*` (shared) + `infrastructure/*` (K
 | Service | Lang | Port | DB / Store | Talks via |
 |---|---|---|---|---|
 | api-gateway | NestJS | 3000 | stateless | REST in, HTTP out |
-| users-service | NestJS | 3001 | Postgres `users-db` | REST + JWT issuance + Kafka `user.events` |
+| users-service | NestJS | 3001 | Postgres `users` | REST + JWT issuance + IAM/RBAC/ABAC (PDP) + Kafka `user.events` |
 | identity-service | NestJS | 3002 | Keycloak / Postgres | REST + Keycloak integration |
 | cards-service | FastAPI | 8000 | Postgres `cards-db` | REST + `card.events` |
 | camera-service | FastAPI | 8000 | — (edge ingest) | gRPC `camera.proto` + `camera.events` |
@@ -32,7 +32,7 @@ Monorepo: `apps/*` (deployables) + `packages/*` (shared) + `infrastructure/*` (K
 
 ## Shared packages
 
-- `@mrun/contracts` — dependency-free shapes shared by the NestJS services: `Role`, JWT claims, user payload interfaces, pagination types.
+- `@mrun/contracts` — dependency-free shapes shared by the NestJS services: `Role`, extended JWT claims, user payload interfaces, pagination types, plus organization, RBAC (roles/permissions/assignments/grants) and authz decision contracts.
 - `@mrun/events` — Kafka topic constants + `BaseEvent` envelope.
 - `@mrun/proto` — `cards|camera|similarity.proto`, generated via `buf`.
 
@@ -42,6 +42,10 @@ Monorepo: `apps/*` (deployables) + `packages/*` (shared) + `infrastructure/*` (K
 2. All cross-service async goes through Kafka topics in `packages/events`.
 3. All sync ML/data-plane contracts go through `packages/proto`.
 4. One writer per store; Postgres is truth, others derived.
-5. Auth: `users-service` issues HS256 JWTs; `api-gateway` and `cards-service` verify them and
-   enforce `admin` / `operator` / `viewer` roles.
-5. Env: `.env.example` committed, `.env` never committed.
+5. Auth: `users-service` issues HS256 JWTs; `api-gateway` and `cards-service` verify them.
+   `users-service` is the only Policy Decision Point: organizations, scoped RBAC, explicit
+   resource grants and JSON ABAC policies (see [`docs/iam.md`](iam.md)). Inside the IAM code,
+   legacy `admin` / `operator` / `viewer` roles are kept only for backward compatibility.
+6. Schema: `synchronize` is development-only (`DB_SYNCHRONIZE`); production runs TypeORM
+   migrations (`DB_MIGRATIONS_RUN`), one migration owner per database.
+7. Env: `.env.example` committed, `.env` never committed.

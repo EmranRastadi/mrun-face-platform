@@ -8,6 +8,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "migration:run": "node dist/common/database/run-migrations.js",
     "test": "jest --passWithNoTests"
   },
   "dependencies": {

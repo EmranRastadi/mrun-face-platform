@@ -241,7 +241,8 @@ Service port; `container` is the port the process listens on.
 
 Authentication is issued by **users-service** and verified by **api-gateway** and **cards-service**
 using a shared HS256 secret (`JWT_SECRET`). The token is valid for `JWT_EXPIRES_IN` (default `7d`)
-and carries `sub`, `username`, `role`, `iss`, and `aud`.
+and carries `sub`, `username`, `role`, `iss`, `aud`, plus the enterprise claims `active_org`,
+`platform_staff`, `ver` and `sid`.
 
 | Role       | Can do                                                                 |
 | ---------- | ---------------------------------------------------------------------- |
@@ -256,10 +257,43 @@ and carries `sub`, `username`, `role`, `iss`, and `aud`.
 - `POST /cards` requires `admin` or `operator`; `GET /cards` requires any authenticated role.
 - `/`, `/health`, and `/info` remain public on the services.
 - The first admin is created from `BOOTSTRAP_ADMIN_USERNAME` / `BOOTSTRAP_ADMIN_PASSWORD` when the
-  users table has no admin. Change those values (and `JWT_SECRET`) in
-  `infrastructure/apps/users-service/secret.yaml` before using this outside local development.
+  users table has no admin, and is granted the `super_admin` system role. Change those values (and
+  `JWT_SECRET`) in `infrastructure/apps/users-service/secret.yaml` before using this outside local
+  development.
 - Role changes affect **new logins**; an already-issued token keeps its `role` claim until it
-  expires. Log in again after a role change.
+  expires. Permission changes take effect immediately in the PDP.
+
+#### Enterprise IAM (organizations, RBAC/ABAC, entitlements)
+
+Beyond the legacy three roles, `users-service` owns the full IAM model — see
+[`docs/iam.md`](docs/iam.md) for the complete reference.
+
+- **Organizations**: `platform` (MRUN staff), `customer` (tenant) and `partner`, with optional
+  parent, status and timezone. Users join through `org_memberships` and can belong to several
+  organizations; `is_primary` selects the active one.
+- **Org units**: departments, teams, units and service centers with a materialized `path`, which
+  lets a role assignment at one unit automatically cover all descendants.
+- **Permissions**: 47-entry `resource:action` catalog split into `platform` and `tenant` tiers,
+  plus reusable permission groups and **20 seeded system roles** (super admin, platform admin,
+  sales, support, technicians, org owner/admin, robot manager/operator, employee, viewer).
+- **Role assignments** are scoped (`platform`, `organization`, `org_unit`, `robot`), optional
+  expiry, revocable. Only `super_admin` holds `*`; tenant roles cannot contain platform
+  permissions; a caller can never grant or assign more than they hold themselves.
+- **Explicit grants and ABAC**: `resource_grants` allow/deny a single permission for a user, unit
+  or role on a specific resource (deny wins), and `authorization_policies` store a small JSON
+  condition DSL (`all/any/not/eq/neq/in/contains/exists`) evaluated without `eval`; malformed
+  policies fail closed.
+- **Policy Decision Point**: `POST /authz/check` and `GET /authz/me/permissions` expose the PDP.
+  Decisions are cached for 30 s and invalidated when assignments, grants or memberships change.
+  A `resource_registry` projection (fed by `robot.events`) lets authorization resolve robots
+  without synchronous cross-service calls.
+- **Gateway exposure**: `/organizations`, `/org-units`, `/roles`, `/permissions`, `/assignments`,
+  `/grants` and `/authz` are proxied by the gateway; `x-org-id` selects the organization context.
+
+New environment variables: `DB_SYNCHRONIZE` (default `true` outside production, `false` in the
+production ConfigMap) and `DB_MIGRATIONS_RUN` (`true` in the production ConfigMap). The IAM schema
+is owned by a TypeORM migration (idempotent, safe on databases created by `synchronize`), and
+`pnpm --filter users-service migration:run` applies it standalone.
 
 ---
 
@@ -420,6 +454,7 @@ Source of truth is each service's OpenAPI/Swagger (`/api` for NestJS services, `
 
 | Service                     | Endpoints                                                                                                                                  |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| users-service (3001)        | `POST /auth/login`, `GET /auth/me`, `/users`, `/organizations`, `/org-units`, `/roles`, `/permissions`, `/assignments`, `/grants`, `/authz/*` |
 | enrollment-service (8001)   | `GET /health`, `POST /enroll`, `POST /enroll/{person_id}/image`, `GET /persons`, `GET /persons/{person_id}`, `DELETE /persons/{person_id}` |
 | audit-service (3003)        | `GET /health`, `GET /audit`, `GET /api`                                                                                                    |
 | notification-service (3004) | `GET /health`, `GET /notifications`, `GET /api`                                                                                            |
@@ -676,7 +711,7 @@ is committed, while `.env` is git-ignored.
 | Group      | Variables                                                                                       |
 | ---------- | ----------------------------------------------------------------------------------------------- |
 | Runtime    | `ENVIRONMENT`, `LOG_LEVEL`                                                                      |
-| Postgres   | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`                                       |
+| Postgres   | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_SYNCHRONIZE`, `DB_MIGRATIONS_RUN`, `DB_LOGGING`                    |
 | Consul     | `CONSUL_HOST`, `CONSUL_PORT`, `CONSUL_ENABLED`                                                  |
 | Kafka      | `KAFKA_BROKERS`                                                                                 |
 | Auth       | `JWT_SECRET`, `JWT_EXPIRES_IN`, `JWT_ISSUER`, `JWT_AUDIENCE`, `BOOTSTRAP_ADMIN_USERNAME`, `BOOTSTRAP_ADMIN_PASSWORD` |

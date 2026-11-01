@@ -1,69 +1,24 @@
+import { randomUUID } from 'crypto';
 import {
   Injectable,
-  Logger,
-  OnModuleInit,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { UsersService } from '../users/users.service';
-import { Role } from '@mrun/contracts';
 import { LoginDto } from './dto/login.dto';
 import type { JwtClaims } from '@mrun/contracts';
+import { AuthzService } from '../iam/authz/authz.service';
 
 @Injectable()
-export class AuthService implements OnModuleInit {
-  private readonly logger = new Logger(AuthService.name);
-
+export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly authz: AuthzService,
   ) {}
-
-  async onModuleInit(): Promise<void> {
-    try {
-      await this.bootstrapAdmin();
-    } catch (error) {
-      this.logger.error(
-        `Admin bootstrap failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
-  }
-
-  private async bootstrapAdmin(): Promise<void> {
-    const username = this.configService.get<string>('BOOTSTRAP_ADMIN_USERNAME');
-    const password = this.configService.get<string>('BOOTSTRAP_ADMIN_PASSWORD');
-    if (!username || !password) {
-      return;
-    }
-
-    const existing = await this.usersService.findByUsername(username);
-    if (existing) {
-      if (!(await this.usersService.hasAdmin())) {
-        await this.usersService.updateRole(existing.id, Role.ADMIN);
-      }
-      return;
-    }
-
-    if (await this.usersService.hasAdmin()) {
-      return;
-    }
-
-    await this.usersService.create(
-      {
-        username,
-        email: this.configService.get<string>(
-          'BOOTSTRAP_ADMIN_EMAIL',
-          `${username}@mrun.local`,
-        ),
-        password,
-        full_name: 'Bootstrap Admin',
-      },
-      Role.ADMIN,
-    );
-  }
 
   async login(dto: LoginDto) {
     const user = await this.usersService.findByUsernameWithPassword(
@@ -78,10 +33,15 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException('Invalid username or password');
     }
 
+    const context = await this.authz.tokenContext(user.id);
     const payload: JwtClaims = {
       sub: String(user.id),
       username: user.username,
       role: user.role,
+      active_org: context.activeOrganizationId,
+      platform_staff: context.platformStaff,
+      ver: context.permissionVersion,
+      sid: randomUUID(),
     };
     const accessToken = await this.jwtService.signAsync(payload);
 
@@ -96,6 +56,8 @@ export class AuthService implements OnModuleInit {
         full_name: user.full_name,
         role: user.role,
         is_active: user.is_active,
+        platform_staff: context.platformStaff,
+        active_organization_id: context.activeOrganizationId,
       },
     };
   }

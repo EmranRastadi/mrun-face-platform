@@ -6,6 +6,7 @@ import { AuditProxyController } from './audit.controller';
 import { NotificationProxyController } from './notification.controller';
 import { AuthProxyController } from './auth.controller';
 import { CardsProxyController } from './cards.controller';
+import { IamProxyController } from './iam.controller';
 
 @Module({
   controllers: [
@@ -15,6 +16,7 @@ import { CardsProxyController } from './cards.controller';
     NotificationProxyController,
     AuthProxyController,
     CardsProxyController,
+    IamProxyController,
   ],
   providers: [ProxyService],
   exports: [ProxyService],

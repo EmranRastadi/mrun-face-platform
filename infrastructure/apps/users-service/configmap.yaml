@@ -38,4 +38,7 @@ data:
   DB_PORT: "5432"
   DB_USER: "users"
   DB_NAME: "users"
+  # Schema is owned by migrations; synchronize must stay off outside local dev.
+  DB_SYNCHRONIZE: "false"
+  DB_MIGRATIONS_RUN: "true"
   #######################  END POSTGRES ##########################

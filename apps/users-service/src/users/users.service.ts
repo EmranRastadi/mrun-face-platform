@@ -12,13 +12,19 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { KafkaService } from '../kafka/kafka.service';
 import { Topics } from '../kafka/topics';
-import { Role } from '@mrun/contracts';
+import { AssignmentStatus, Role, ScopeType } from '@mrun/contracts';
+import { RoleAssignment } from '../iam/entities/role-assignment.entity';
+import { Role as RoleEntity } from '../iam/entities/role.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(RoleAssignment)
+    private assignmentsRepository: Repository<RoleAssignment>,
+    @InjectRepository(RoleEntity)
+    private rolesRepository: Repository<RoleEntity>,
     private kafka: KafkaService,
   ) {}
 
@@ -47,11 +53,21 @@ export class UsersService {
 
     const savedUser = await this.usersRepository.save(user);
 
-    await this.kafka.emit(Topics.USER_CREATED, {
-      userId: savedUser.id,
-      username: savedUser.username,
-      email: savedUser.email,
-    });
+    try {
+      await this.kafka.emit(Topics.USER_CREATED, {
+        userId: savedUser.id,
+        username: savedUser.username,
+        email: savedUser.email,
+      });
+    } catch (error) {
+      // User creation must not fail because the event bus is unavailable.
+      // The record is the source of truth; the event can be replayed later.
+      console.error(
+        `Failed to publish USER_CREATED for user ${savedUser.id}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
 
     return this.withoutPassword(savedUser);
   }
@@ -114,6 +130,37 @@ export class UsersService {
     if (user.role === Role.ADMIN && (await this.countAdmins()) <= 1) {
       throw new BadRequestException('Cannot delete the last admin');
     }
+
+    const superAdminRole = await this.rolesRepository.findOne({
+      where: { key: 'super_admin' },
+    });
+    if (superAdminRole) {
+      const own = await this.assignmentsRepository.count({
+        where: {
+          user_id: id,
+          role_id: superAdminRole.id,
+          status: AssignmentStatus.ACTIVE,
+        },
+      });
+      if (own > 0) {
+        const total = await this.assignmentsRepository.count({
+          where: {
+            role_id: superAdminRole.id,
+            scope_type: ScopeType.PLATFORM,
+            status: AssignmentStatus.ACTIVE,
+          },
+        });
+        if (total <= 1) {
+          throw new BadRequestException('Cannot delete the last super admin');
+        }
+      }
+    }
+
+    await this.assignmentsRepository.update(
+      { user_id: id, status: AssignmentStatus.ACTIVE },
+      { status: AssignmentStatus.REVOKED, revoked_at: new Date() },
+    );
+
     const result = await this.usersRepository.delete(id);
     if (result.affected === 0) {
       throw new NotFoundException(`User with ID ${id} not found`);
