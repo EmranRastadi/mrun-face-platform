@@ -22,8 +22,10 @@ COPY packages/events/package.json packages/events/
 COPY packages/observability/package.json packages/observability/
 COPY apps/notification-service/package.json apps/notification-service/
 RUN pnpm install --no-frozen-lockfile --prod --filter notification-service...
-COPY --from=build /repo/packages/events packages/events
-COPY --from=build /repo/packages/observability packages/observability
+# Copy only build outputs. Copying the whole package would overwrite the
+# production node_modules symlinks created by pnpm with build-stage ones.
+COPY --from=build /repo/packages/events/dist packages/events/dist
+COPY --from=build /repo/packages/observability/dist packages/observability/dist
 COPY --from=build /repo/apps/notification-service/dist apps/notification-service/dist
 WORKDIR /repo/apps/notification-service
 EXPOSE 3004

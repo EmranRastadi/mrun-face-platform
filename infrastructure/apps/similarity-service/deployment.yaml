@@ -63,6 +63,13 @@ spec:
               cpu: 500m
               memory: 512Mi
 
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 5
+            failureThreshold: 30
+
           readinessProbe:
             httpGet:
               path: /health

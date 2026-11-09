@@ -184,6 +184,41 @@ services:
       start_period: 30s
     restart: unless-stopped
 
+  # ==================== WebRTC / ICE ====================
+  # STUN + TURN for browser ICE. Profile "webrtc" keeps it out of the default
+  # data-store stack; start with: make webrtc-up
+  #
+  # The relay UDP range must be reachable from the browser. For a browser on
+  # this host the 127.0.0.1 default works through Docker's published ports. For
+  # a browser on another machine set TURN_EXTERNAL_IP to the host's LAN/public
+  # address and open the same ports in the firewall.
+  coturn:
+    image: coturn/coturn:4.6.2
+    profiles: ["webrtc"]
+    container_name: mrun-coturn
+    command:
+      - "-n"
+      - "--log-file=stdout"
+      - "--lt-cred-mech"
+      - "--user=${TURN_USERNAME:-mrun}:${TURN_PASSWORD:-change-me-in-development}"
+      - "--realm=${TURN_REALM:-mrun.local}"
+      - "--fingerprint"
+      - "--min-port=${TURN_MIN_PORT:-49160}"
+      - "--max-port=${TURN_MAX_PORT:-49200}"
+      - "--external-ip=${TURN_EXTERNAL_IP:-127.0.0.1}"
+      - "--no-cli"
+      - "--no-multicast-peers"
+      - "--no-tls"
+      - "--no-dtls"
+      - "--stale-nonce=600"
+    ports:
+      - "3478:3478/tcp"
+      - "3478:3478/udp"
+      - "${TURN_MIN_PORT:-49160}-${TURN_MAX_PORT:-49200}:${TURN_MIN_PORT:-49160}-${TURN_MAX_PORT:-49200}/udp"
+    networks:
+      - mrun-network
+    restart: unless-stopped
+
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: mrun-kafka-ui

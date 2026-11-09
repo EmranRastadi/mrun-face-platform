@@ -1,5 +1,8 @@
 import './tracing';
-import { createMetrics } from '@mrun/observability';
+import {
+  createMetrics,
+  rejectUnsupportedHttpMethods,
+} from '@mrun/observability';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -21,6 +24,9 @@ async function bootstrap() {
   });
 
   const app = await NestFactory.create(AppModule, { logger });
+
+  // Reject HEAD/OPTIONS before routes and CORS middleware can answer them.
+  app.use(rejectUnsupportedHttpMethods);
 
   // Prometheus metrics (scraped through the ServiceMonitor on port `http`).
   const metrics = createMetrics('analytics-service');

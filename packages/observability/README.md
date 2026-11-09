@@ -7,6 +7,10 @@ repo. It provides the two things Prometheus/Tempo need from an application:
   `http_requests_total` / `http_request_duration_seconds`, served on `/metrics`.
 - **Tracing** — OpenTelemetry auto-instrumentation exported over OTLP/HTTP to
   Tempo. Opt-in: no-op unless `OTEL_EXPORTER_OTLP_ENDPOINT` is set.
+- **HTTP method hardening** — `rejectUnsupportedHttpMethods` is an
+  Express-compatible middleware that answers `HEAD` and `OPTIONS` with `405`
+  and `Allow: GET, POST, PUT, PATCH, DELETE`. Register it before routes and
+  CORS middleware.
 
 ## Usage
 

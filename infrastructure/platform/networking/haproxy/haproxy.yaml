@@ -24,7 +24,7 @@ data:
 
     backend services
       balance roundrobin
-      option httpchk HEAD /
+      option httpchk GET /
       option http-ignore-probes
       server api-gateway api-gateway.mrun-apps.svc.cluster.local:3000 check
       server identity-service identity-service.mrun-apps.svc.cluster.local:3000 check

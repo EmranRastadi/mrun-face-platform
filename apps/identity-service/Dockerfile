@@ -19,7 +19,9 @@ COPY package.json pnpm-workspace.yaml ./
 COPY packages/observability/package.json packages/observability/
 COPY apps/identity-service/package.json apps/identity-service/
 RUN pnpm install --no-frozen-lockfile --prod --filter identity-service...
-COPY --from=build /repo/packages/observability packages/observability
+# Copy only build outputs. Copying the whole package would overwrite the
+# production node_modules symlinks created by pnpm with build-stage ones.
+COPY --from=build /repo/packages/observability/dist packages/observability/dist
 COPY --from=build /repo/apps/identity-service/dist apps/identity-service/dist
 WORKDIR /repo/apps/identity-service
 

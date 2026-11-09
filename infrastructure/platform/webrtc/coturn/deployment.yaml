@@ -1,0 +1,137 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: coturn
+  namespace: mrun-system
+  labels:
+    app.kubernetes.io/name: coturn
+    app.kubernetes.io/part-of: mrun-platform
+    app.kubernetes.io/component: webrtc
+
+spec:
+  replicas: 1
+
+  # A TURN allocation is pinned to one pod; rolling updates would drop relay
+  # allocations. Recreate keeps a single, predictable relay endpoint.
+  strategy:
+    type: Recreate
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: coturn
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: coturn
+        app.kubernetes.io/part-of: mrun-platform
+        app.kubernetes.io/component: webrtc
+
+    spec:
+      # TURN relay ports are dynamic (49160-49200/udp), so the pod must bind
+      # them directly on the node instead of going through a ClusterIP.
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      terminationGracePeriodSeconds: 15
+
+      containers:
+        - name: coturn
+          image: coturn/coturn:4.6.2
+          imagePullPolicy: IfNotPresent
+
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              external_ip="${TURN_EXTERNAL_IP:-$HOST_IP}"
+              if [ "$external_ip" = "auto" ]; then
+                external_ip="$HOST_IP"
+              fi
+              exec turnserver \
+                -n \
+                --log-file=stdout \
+                --lt-cred-mech \
+                --user="${TURN_USERNAME}:${TURN_PASSWORD}" \
+                --realm="${TURN_REALM}" \
+                --fingerprint \
+                --listening-port="${TURN_LISTENING_PORT}" \
+                --min-port="${TURN_MIN_PORT}" \
+                --max-port="${TURN_MAX_PORT}" \
+                --external-ip="$external_ip" \
+                --no-cli \
+                --no-multicast-peers \
+                --no-tls \
+                --no-dtls \
+                --stale-nonce=600
+
+          ports:
+            - name: turn-udp
+              containerPort: 3478
+              protocol: UDP
+            - name: turn-tcp
+              containerPort: 3478
+              protocol: TCP
+
+          env:
+            - name: TURN_REALM
+              valueFrom:
+                configMapKeyRef:
+                  name: coturn-config
+                  key: TURN_REALM
+            - name: TURN_MIN_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: coturn-config
+                  key: TURN_MIN_PORT
+            - name: TURN_MAX_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: coturn-config
+                  key: TURN_MAX_PORT
+            - name: TURN_LISTENING_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: coturn-config
+                  key: TURN_LISTENING_PORT
+            - name: TURN_EXTERNAL_IP
+              valueFrom:
+                configMapKeyRef:
+                  name: coturn-config
+                  key: TURN_EXTERNAL_IP
+            - name: TURN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: coturn-secret
+                  key: TURN_USERNAME
+            - name: TURN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: coturn-secret
+                  key: TURN_PASSWORD
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+
+          readinessProbe:
+            tcpSocket:
+              port: 3478
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 2
+
+          livenessProbe:
+            tcpSocket:
+              port: 3478
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 2

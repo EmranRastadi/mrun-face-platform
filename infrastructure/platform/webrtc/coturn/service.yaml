@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: coturn
+  namespace: mrun-system
+  labels:
+    app.kubernetes.io/name: coturn
+    app.kubernetes.io/part-of: mrun-platform
+    app.kubernetes.io/component: webrtc
+
+spec:
+  # NodePort is required because WebRTC peers outside the cluster must reach
+  # STUN/TURN directly. The relay UDP range (49160-49200) is bound by the
+  # hostNetwork pod on the node and is NOT represented by this Service.
+  type: NodePort
+  externalTrafficPolicy: Local
+
+  selector:
+    app.kubernetes.io/name: coturn
+
+  ports:
+    - name: turn-udp
+      port: 3478
+      targetPort: 3478
+      protocol: UDP
+      nodePort: 30478
+    - name: turn-tcp
+      port: 3478
+      targetPort: 3478
+      protocol: TCP
+      nodePort: 30479

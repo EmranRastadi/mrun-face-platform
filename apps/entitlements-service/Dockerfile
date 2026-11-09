@@ -22,8 +22,10 @@ COPY packages/contracts/package.json packages/contracts/
 COPY packages/observability/package.json packages/observability/
 COPY apps/entitlements-service/package.json apps/entitlements-service/
 RUN pnpm install --no-frozen-lockfile --prod --filter entitlements-service...
-COPY --from=build /repo/packages/contracts packages/contracts
-COPY --from=build /repo/packages/observability packages/observability
+# Copy only build outputs. Copying the whole package would overwrite the
+# production node_modules symlinks created by pnpm with build-stage ones.
+COPY --from=build /repo/packages/contracts/dist packages/contracts/dist
+COPY --from=build /repo/packages/observability/dist packages/observability/dist
 COPY --from=build /repo/apps/entitlements-service/dist apps/entitlements-service/dist
 WORKDIR /repo/apps/entitlements-service
 EXPOSE 3000

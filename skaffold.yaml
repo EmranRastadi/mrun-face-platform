@@ -85,6 +85,7 @@ manifests:
       - infrastructure/platform/databases/minio
       - infrastructure/platform/databases/milvus
       - infrastructure/platform/monitoring
+      - infrastructure/platform/webrtc
       - infrastructure/apps
 #      - infrastructure/platform/networking
       - infrastructure/platform/identity

@@ -19,3 +19,15 @@ data:
   OTEL_ENABLED: "true"
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo.mrun-monitoring.svc.cluster.local:4318"
   OTEL_SERVICE_NAME: "camera-service"
+
+  # WebRTC / ICE. These URLs are consumed by the *browser*, not by the pod, so
+  # they must point at an address the browser can reach (node/public IP, not an
+  # in-cluster DNS name). The defaults assume coturn from docker-compose
+  # published on the local machine; override for kind/remote clusters.
+  WEBRTC_ENABLED: "true"
+  STUN_URLS: "stun:localhost:3478"
+  TURN_URLS: "turn:localhost:3478?transport=udp,turn:localhost:3478?transport=tcp"
+  TURN_REALM: "mrun.local"
+  TURN_MIN_PORT: "49160"
+  TURN_MAX_PORT: "49200"
+  WEBRTC_FORCE_RELAY: "false"

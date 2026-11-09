@@ -11,8 +11,8 @@ else
   echo "    Skipped: Docker Desktop's Linux VM manages these limits on $(uname -s)."
 fi
 
-echo "==> [2/5] Starting docker-compose infra (postgres, kafka, clickhouse, kafka-ui, minio)"
-docker compose --profile blob up -d
+echo "==> [2/5] Starting docker-compose infra (postgres, kafka, clickhouse, kafka-ui, minio, coturn)"
+docker compose --profile blob --profile webrtc up -d
 
 echo "==> [3/5] Installing the monitoring stack (kube-prometheus-stack, Loki, Tempo, Fluent Bit)"
 if helm status kube-prometheus-stack -n mrun-monitoring >/dev/null 2>&1; then

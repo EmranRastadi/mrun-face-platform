@@ -148,6 +148,7 @@ sequenceDiagram
 | APIs             | REST (OpenAPI/Swagger) + gRPC/protobuf (`buf`)                                                            |
 | Packaging        | Docker (multi-stage), Skaffold build (`mrun/*` images)                                                    |
 | Orchestration    | **Kubernetes** (kind for local), **Kustomize** overlays, **Skaffold v4**                                  |
+| WebRTC / ICE     | **coturn** STUN/TURN, browser ICE (`host`/`srflx`/`relay`), WebSocket signaling in `camera-service`      |
 | Observability    | kube-prometheus-stack (Prometheus Operator), Grafana, Loki, Tempo, Fluent Bit, OpenTelemetry OTLP, Winston JSON logs |
 
 ---
@@ -163,11 +164,11 @@ sequenceDiagram
 │   └── proto/   @mrun/proto   # camera/cards/similarity .proto (buf)
 ├── infrastructure/
 │   ├── bootstrap/            # namespaces, quotas, reflector
-│   ├── platform/             # external-services, databases, discovery, monitoring, identity, networking
+│   ├── platform/             # external-services, databases, discovery, monitoring, identity, networking, webrtc
 │   ├── apps/                 # one dir per service (k8s manifests)
 │   ├── vm/                   # compose init scripts (Postgres/ClickHouse SQL)
 │   └── kustomization.yaml    # root: bootstrap → platform → apps
-├── docs/                     # architecture, DDD boundaries, API contracts, Kafka topics
+├── docs/                     # architecture, DDD boundaries, API contracts, Kafka topics, webrtc
 ├── scripts/                  # up.sh, kind-up.sh, docker-clean.sh
 ├── docker-compose.yml        # local infrastructure (and optional app containers)
 ├── skaffold.yaml             # build + deploy to Kubernetes
@@ -189,7 +190,7 @@ Service port; `container` is the port the process listens on.
 | **users-service**        | NestJS               | `3000` → `3000`                    | Postgres `users`                     | TypeORM, pg, `@nestjs/jwt`, passport, bcryptjs, kafkajs, consul | Users, credentials, JWT issuance, RBAC, profiles             |
 | **identity-service**     | NestJS               | `3000` → `3000`                    | Keycloak                             | kafkajs                                                         | Identity / access, Keycloak integration, rate-limit + dedupe |
 | **cards-service**        | FastAPI              | `3000` → `8000`                    | Postgres `cards`, MinIO              | httpx, python-consul, PyJWT                                     | Card lifecycle; image storage; JWT verification              |
-| **camera-service**       | FastAPI              | `8000` → `8000`                    | —                                    | pydantic-settings                                               | Camera/frame ingest (scaffold)                               |
+| **camera-service**       | FastAPI              | `8000` → `8000`                    | —                                    | pydantic-settings, coturn                                       | Camera ingest + WebRTC ICE config, signaling relay and test page |
 | **similarity-service**   | FastAPI              | `8000` → `8000`                    | Milvus                               | pydantic-settings                                               | Vector similarity search (scaffold)                          |
 | **worker-service**       | FastAPI              | `8000` → `8000`                    | Kafka                                | kafka-python                                                    | Background recognition worker (Kafka consumer, scaffold)     |
 | **enrollment-service**   | FastAPI              | `8001` → `8001`                    | Postgres `enrollment`, MinIO, Milvus | boto3, pymilvus, psycopg, kafka-python, python-multipart        | Person/face enrollment (the pipeline entry point)            |
@@ -410,6 +411,34 @@ flowchart TB
 > Loki; traces are exported over OTLP/HTTP to Tempo (`OTEL_EXPORTER_OTLP_ENDPOINT`).
 > Open Grafana with `kubectl -n mrun-monitoring port-forward svc/grafana 3000:3000`
 > (credentials in `grafana-secret`).
+
+### WebRTC / ICE (STUN + TURN)
+
+`camera-service` serves the browser ICE configuration (`GET /webrtc/config`), a WebSocket
+signaling relay (`/webrtc/signaling`) and a connectivity test page (`/webrtc/`). coturn
+provides STUN and TURN:
+
+- **Compose** — profile `webrtc`: `make webrtc-up` (ports `3478/tcp`, `3478/udp`,
+  `49160-49200/udp`). Set `TURN_EXTERNAL_IP` to the host LAN/public address when the
+  browser is not on the same machine.
+- **Kubernetes** — `infrastructure/platform/webrtc/coturn/`: hostNetwork coturn with
+  NodePort `30478/udp` + `30479/tcp`; the relay UDP range is bound directly on the node.
+
+The test page creates two real `RTCPeerConnection`s and shows `host`, `srflx` and `relay`
+candidates, state transitions, the selected candidate pair from `getStats()`, and RTP
+counters. Force relay with `?auto=1&relay=1`. Full reference:
+[`docs/webrtc/README.md`](docs/webrtc/README.md) and
+[`docs/webrtc/verification.md`](docs/webrtc/verification.md).
+
+```bash
+make webrtc-up
+make webrtc-stun-check
+
+cd apps/camera-service
+set -a; source ../../.env; set +a
+uvicorn src.main:app --host 0.0.0.0 --port 8000
+# open http://127.0.0.1:8000/webrtc/
+```
 
 ### The external-services bridge (why it exists)
 
@@ -762,6 +791,8 @@ Service DNS names above (e.g. `KAFKA_BROKERS=kafka.mrun-messaging.svc.cluster.lo
 | Lint / test / format    | `pnpm lint` · `pnpm test` · `pnpm format`             |
 | Generate protos         | `make proto` (`buf lint && buf generate`)             |
 | Start local infra       | `docker compose up -d` / `make up` · `make up-vector` |
+| Start STUN/TURN         | `make webrtc-up` · `make webrtc-stun-check`           |
+| WebRTC test page        | `http://127.0.0.1:8000/webrtc/`                       |
 | Bring up everything     | `./scripts/up.sh`                                     |
 | Deploy to k8s           | `skaffold run` · `make deploy` (`-p prod`)            |
 | Render manifests        | `kubectl kustomize infrastructure`                    |
@@ -810,7 +841,7 @@ sync ML/data-plane contracts go through `@mrun/proto`.
    ```
 
 4. **Create the manifest set** `infrastructure/apps/<svc>/` — copy an existing service such as
-   `camera-service` (8 files) and adjust:
+   `camera-service` (9 files) and adjust:
 
    ```
    infrastructure/apps/<svc>/
@@ -821,7 +852,8 @@ sync ML/data-plane contracts go through `@mrun/proto`.
    ├── deployment.yaml       # ns mrun-apps, image mrun/<svc>, labels, resources, httpGet probes
    ├── hpa.yaml              # autoscaling/v2, CPU 70%, maxReplicas 5
    ├── networkpolicy.yaml    # ingress + egress
-   └── pdb.yaml              # minAvailable: 1
+   ├── pdb.yaml              # minAvailable: 1
+   └── servicemonitor.yaml   # Prometheus scraping of /metrics
    ```
 
    Set `metadata.namespace: mrun-apps`, label `app.kubernetes.io/part-of: mrun-platform`, keep

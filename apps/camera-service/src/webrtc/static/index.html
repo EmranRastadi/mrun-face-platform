@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MRUN WebRTC Connectivity Test</title>
+    <link rel="stylesheet" href="/webrtc/static/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>WebRTC Connectivity Test</h1>
+        <p class="subtitle">
+          Real ICE gathering through the camera-service signaling relay. The page
+          creates two independent <code>RTCPeerConnection</code>s (sender and
+          receiver) and streams a generated canvas over WebRTC.
+        </p>
+      </div>
+      <div class="topbar-links">
+        <a href="/webrtc/config" target="_blank" rel="noreferrer">/webrtc/config</a>
+        <a href="/webrtc/diagnostics" target="_blank" rel="noreferrer">/webrtc/diagnostics</a>
+        <a href="/api" target="_blank" rel="noreferrer">Swagger</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel toolbar">
+        <label>
+          Room
+          <input id="room" type="text" maxlength="64" spellcheck="false" />
+        </label>
+        <label class="check">
+          <input id="force-relay" type="checkbox" />
+          Force relay (<code>iceTransportPolicy: relay</code>)
+        </label>
+        <label class="check">
+          <input id="use-webcam" type="checkbox" />
+          Use webcam instead of canvas
+        </label>
+        <div class="toolbar-actions">
+          <button id="start" class="primary">Start test</button>
+          <button id="restart">Restart</button>
+          <button id="copy-report">Copy report</button>
+        </div>
+        <p id="hint" class="hint"></p>
+      </section>
+
+      <section class="grid two">
+        <article class="panel peer-card">
+          <div class="panel-heading">
+            <h2>Camera / sender</h2>
+            <span id="camera-ws" class="badge state-closed">signaling: closed</span>
+          </div>
+          <div class="states">
+            <div><span>iceGatheringState</span><span id="camera-iceGatheringState" class="badge">new</span></div>
+            <div><span>iceConnectionState</span><span id="camera-iceConnectionState" class="badge">new</span></div>
+            <div><span>connectionState</span><span id="camera-connectionState" class="badge">new</span></div>
+            <div><span>signalingState</span><span id="camera-signalingState" class="badge">stable</span></div>
+          </div>
+          <canvas id="source-canvas" width="640" height="360" aria-label="Generated camera stream"></canvas>
+          <p class="muted small">Generated 640×360 / 15 fps stream (or webcam if enabled).</p>
+          <div id="camera-candidates" class="candidates"></div>
+        </article>
+
+        <article class="panel peer-card">
+          <div class="panel-heading">
+            <h2>Viewer / receiver</h2>
+            <span id="viewer-ws" class="badge state-closed">signaling: closed</span>
+          </div>
+          <div class="states">
+            <div><span>iceGatheringState</span><span id="viewer-iceGatheringState" class="badge">new</span></div>
+            <div><span>iceConnectionState</span><span id="viewer-iceConnectionState" class="badge">new</span></div>
+            <div><span>connectionState</span><span id="viewer-connectionState" class="badge">new</span></div>
+            <div><span>signalingState</span><span id="viewer-signalingState" class="badge">stable</span></div>
+          </div>
+          <video id="remote-video" autoplay playsinline muted></video>
+          <p id="remote-status" class="muted small">Waiting for the sender stream…</p>
+          <div id="viewer-candidates" class="candidates"></div>
+        </article>
+      </section>
+
+      <section class="grid two">
+        <article class="panel">
+          <h2>Selected candidate pair</h2>
+          <p class="muted small">From <code>RTCPeerConnection.getStats()</code> (viewer / receiving side).</p>
+          <div id="selected-pair" class="empty">No selected pair yet.</div>
+        </article>
+        <article class="panel">
+          <h2>Media stats</h2>
+          <div id="media-stats" class="empty">No RTP stats yet.</div>
+        </article>
+      </section>
+
+      <section class="grid two">
+        <article class="panel">
+          <h2>ICE servers</h2>
+          <div id="config-panel" class="empty">Loading configuration…</div>
+        </article>
+        <article class="panel">
+          <div class="panel-heading">
+            <h2>Server-side diagnostics</h2>
+            <button id="run-diagnostics">Re-run</button>
+          </div>
+          <div id="diagnostics-panel" class="empty">Loading diagnostics…</div>
+        </article>
+      </section>
+
+      <section class="panel">
+        <div class="panel-heading">
+          <h2>Event log</h2>
+          <button id="clear-log">Clear</button>
+        </div>
+        <pre id="event-log" class="event-log"></pre>
+      </section>
+
+      <section class="panel legend">
+        <h2>Candidate types</h2>
+        <p><strong>host</strong> — local interface address (LAN).</p>
+        <p><strong>srflx</strong> — server-reflexive address discovered through STUN.</p>
+        <p><strong>prflx</strong> — peer-reflexive address discovered during connectivity checks.</p>
+        <p><strong>relay</strong> — address allocated on the TURN server; media is relayed through it.</p>
+      </section>
+    </main>
+
+    <script src="/webrtc/static/app.js"></script>
+  </body>
+</html>

@@ -1,4 +1,4 @@
-.PHONY: install dev build test lint format proto clean up down deploy monitoring monitoring-uninstall
+.PHONY: install dev build test lint format proto clean up down deploy monitoring monitoring-uninstall webrtc-up webrtc-down webrtc-logs webrtc-status webrtc-stun-check
 
 install:
 	pnpm install
@@ -38,6 +38,23 @@ monitoring-uninstall:
 
 up-vector:
 	docker compose --profile vector up -d
+
+# WebRTC ICE: coturn STUN/TURN (profile "webrtc" keeps it optional).
+webrtc-up:
+	docker compose --profile webrtc up -d coturn
+
+webrtc-down:
+	docker compose --profile webrtc stop coturn
+
+webrtc-logs:
+	docker compose --profile webrtc logs -f coturn
+
+webrtc-status:
+	docker compose --profile webrtc ps coturn
+
+# Real STUN binding from inside the coturn container (not just a port check).
+webrtc-stun-check:
+	docker compose --profile webrtc exec -T coturn turnutils_stunclient -p 3478 127.0.0.1
 
 down:
 	docker compose down -v

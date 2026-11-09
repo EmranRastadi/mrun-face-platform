@@ -22,8 +22,10 @@ COPY packages/contracts/package.json packages/contracts/
 COPY packages/observability/package.json packages/observability/
 COPY apps/api-gateway/package.json apps/api-gateway/
 RUN pnpm install --no-frozen-lockfile --prod --filter api-gateway...
-COPY --from=build /repo/packages/contracts packages/contracts
-COPY --from=build /repo/packages/observability packages/observability
+# Copy only build outputs. Copying the whole package would overwrite the
+# production node_modules symlinks created by pnpm with build-stage ones.
+COPY --from=build /repo/packages/contracts/dist packages/contracts/dist
+COPY --from=build /repo/packages/observability/dist packages/observability/dist
 COPY --from=build /repo/apps/api-gateway/dist apps/api-gateway/dist
 WORKDIR /repo/apps/api-gateway
 

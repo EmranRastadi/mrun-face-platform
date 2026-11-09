@@ -10,7 +10,7 @@ Monorepo: `apps/*` (deployables) + `packages/*` (shared) + `infrastructure/*` (K
 | users-service | NestJS | 3001 | Postgres `users` | REST + JWT issuance + IAM/RBAC/ABAC (PDP) + Kafka `user.events` |
 | identity-service | NestJS | 3002 | Keycloak / Postgres | REST + Keycloak integration |
 | cards-service | FastAPI | 8000 | Postgres `cards-db` | REST + `card.events` |
-| camera-service | FastAPI | 8000 | — (edge ingest) | gRPC `camera.proto` + `camera.events` |
+| camera-service | FastAPI | 8000 | — (edge ingest) | gRPC `camera.proto` + `camera.events` + WebRTC ICE/signaling |
 | similarity-service | FastAPI | 8000 | Milvus | gRPC `similarity.proto` + `embedding.events` |
 | worker-service | Python | — | Kafka consumer | consumes `vision/recognition/*` |
 | enrollment-service | FastAPI | 8001 | Postgres `enrollment-db` + MinIO + Milvus | REST + `enrollment.events` |
@@ -49,5 +49,19 @@ Monorepo: `apps/*` (deployables) + `packages/*` (shared) + `infrastructure/*` (K
 6. Schema: `synchronize` is development-only (`DB_SYNCHRONIZE`); production runs TypeORM
    migrations (`DB_MIGRATIONS_RUN`), one migration owner per database.
 7. Env: `.env.example` committed, `.env` never committed.
+8. HTTP methods: services answer `GET`, `POST`, `PUT`, `PATCH`, `DELETE` only.
+   `HEAD` and `OPTIONS` are rejected with `405 Method Not Allowed`; CORS
+   preflight is intentionally unsupported.
 
 - `entitlements-service` (NestJS 3000): plans, subscriptions, entitlement resolution (PDP via users-service). See `docs/entitlements.md`.
+
+## WebRTC / ICE
+
+`camera-service` is also the WebRTC edge: it exposes `GET /webrtc/config` (browser
+`iceServers`), `GET /webrtc/diagnostics` (real STUN Binding probe + TURN TCP
+check), a WebSocket signaling relay at `/webrtc/signaling`, and a static
+connectivity test page at `/webrtc/`. coturn supplies STUN/TURN in Compose
+(profile `webrtc`) and in Kubernetes (`infrastructure/platform/webrtc/coturn/`).
+The application layer still has no media server; the test page uses two real
+browser `RTCPeerConnection`s. See `docs/webrtc/README.md` for architecture,
+NAT scenarios, ports and production guidance.
