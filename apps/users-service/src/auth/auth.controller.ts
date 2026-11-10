@@ -10,6 +10,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { KeycloakExchangeDto } from './dto/keycloak-exchange.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import type { JwtPayload } from '@mrun/contracts';
@@ -28,6 +29,15 @@ export class AuthController {
   @ApiOperation({ summary: 'Exchange credentials for a JWT' })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Post('keycloak/exchange')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Exchange a Keycloak access token for a platform JWT',
+  })
+  exchangeKeycloakToken(@Body() dto: KeycloakExchangeDto) {
+    return this.authService.exchangeKeycloakToken(dto);
   }
 
   @Get('me')

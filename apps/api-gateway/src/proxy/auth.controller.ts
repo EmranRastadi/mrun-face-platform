@@ -15,6 +15,12 @@ export class AuthProxyController {
     return this.proxy.forward('USERS_SERVICE_URL', req, res);
   }
 
+  @Public()
+  @Post('keycloak/exchange')
+  keycloakExchange(@Req() req: Request, @Res() res: Response) {
+    return this.proxy.forward('USERS_SERVICE_URL', req, res);
+  }
+
   @Get('me')
   me(@Req() req: Request, @Res() res: Response) {
     return this.proxy.forward('USERS_SERVICE_URL', req, res);

@@ -222,8 +222,9 @@ Service port; `container` is the port the process listens on.
   `CONSUL_ENABLED=true` it both registers itself and resolves upstream targets from the Consul
   catalog, falling back to the static `*_SERVICE_URL` env vars when Consul is disabled or
   unavailable. It verifies inbound JWTs and enforces role checks before proxying.
-- **users-service** — TypeORM + Postgres (schema-per-app DB `users`). Issues HS256 JWTs (7d default)
-  and owns user roles/RBAC. Produces `user.events`.
+- **users-service** — TypeORM + Postgres (schema-per-app DB `users`). Issues HS256 JWTs (7d default),
+  owns user roles/RBAC, and exchanges Keycloak RS256 access tokens for platform tokens. Produces
+  `user.events`.
 - **identity-service** — Exposes `/health` (Consul health-check target) and registers with Consul.
 - **cards-service** — FastAPI storing card metadata in Postgres and images in the `cards-images`
   MinIO bucket. Emits `card.events`. Verifies the users-service JWT for write/read access.
@@ -252,6 +253,8 @@ and carries `sub`, `username`, `role`, `iss`, `aud`, plus the enterprise claims 
 | `viewer`   | Read cards and own profile                                             |
 
 - `POST /auth/login` (public) exchanges username/password for an access token.
+- `POST /auth/keycloak/exchange` (public) verifies a Keycloak RS256 access token and returns the
+  normal platform token. See [`docs/iam.md` §4.1](docs/iam.md#41-keycloak-token-exchange).
 - `GET /auth/me` returns the authenticated user.
 - `POST /users`, `GET /users`, `DELETE /users/:id`, and `PATCH /users/:id/role` are **admin-only**.
 - `GET/PATCH /users/:id` are **admin or self**; users cannot change their own role.
@@ -490,7 +493,7 @@ Source of truth is each service's OpenAPI/Swagger (`/api` for NestJS services, `
 
 | Service                     | Endpoints                                                                                                                                  |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| users-service (3001)        | `POST /auth/login`, `GET /auth/me`, `/users`, `/organizations`, `/org-units`, `/roles`, `/permissions`, `/assignments`, `/grants`, `/authz/*` |
+| users-service (3001)        | `POST /auth/login`, `POST /auth/keycloak/exchange`, `GET /auth/me`, `/users`, `/organizations`, `/org-units`, `/roles`, `/permissions`, `/assignments`, `/grants`, `/authz/*` |
 | enrollment-service (8001)   | `GET /health`, `POST /enroll`, `POST /enroll/{person_id}/image`, `GET /persons`, `GET /persons/{person_id}`, `DELETE /persons/{person_id}` |
 | audit-service (3003)        | `GET /health`, `GET /audit`, `GET /api`                                                                                                    |
 | notification-service (3004) | `GET /health`, `GET /notifications`, `GET /api`                                                                                            |
@@ -751,6 +754,7 @@ is committed, while `.env` is git-ignored.
 | Consul     | `CONSUL_HOST`, `CONSUL_PORT`, `CONSUL_ENABLED`                                                  |
 | Kafka      | `KAFKA_BROKERS`                                                                                 |
 | Auth       | `JWT_SECRET`, `JWT_EXPIRES_IN`, `JWT_ISSUER`, `JWT_AUDIENCE`, `BOOTSTRAP_ADMIN_USERNAME`, `BOOTSTRAP_ADMIN_PASSWORD` |
+| Keycloak   | `KEYCLOAK_ENABLED`, `KEYCLOAK_URL`, `KEYCLOAK_REALM`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_ISSUERS`, `KEYCLOAK_ALLOWED_CLIENTS`, `KEYCLOAK_AUTO_PROVISION`, `KEYCLOAK_SYNC_ROLE` |
 | Dragonfly  | `DRAGONFLY_HOST`, `DRAGONFLY_PORT`                                                              |
 | MinIO      | `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET`                        |
 | Milvus     | `MILVUS_HOST`, `MILVUS_PORT`, `MILVUS_COLLECTION`, `MILVUS_DIM` (512)                           |

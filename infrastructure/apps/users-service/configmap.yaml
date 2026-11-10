@@ -21,7 +21,23 @@ data:
   KAFKA_BROKERS: "kafka.mrun-messaging.svc.cluster.local:9092"
   KAFKA_CLIENT_ID: "user-service"
 
+  #######################  START KEYCLOAK ##########################
+  # Keycloak is the edge identity provider. users-service verifies its RS256
+  # access token, maps the Keycloak username to a local user and then issues
+  # the normal platform HS256 token used by every other service.
+  KEYCLOAK_ENABLED: "true"
   KEYCLOAK_URL: "http://keycloak.mrun-security.svc.cluster.local:8080"
+  KEYCLOAK_REALM: "mrun"
+  KEYCLOAK_CLIENT_ID: "mrun-backend"
+  # Keycloak sets `iss` from the URL used to request the token. Keep the
+  # in-cluster issuer and the host port-forward issuers used for local
+  # development. Signatures are still verified against the realm JWKS.
+  KEYCLOAK_ISSUERS: "http://keycloak.mrun-security.svc.cluster.local:8080/realms/mrun,http://localhost:8070/realms/mrun,http://127.0.0.1:8070/realms/mrun,http://localhost:8080/realms/mrun,http://127.0.0.1:8080/realms/mrun"
+  KEYCLOAK_ALLOWED_CLIENTS: "mrun-backend"
+  KEYCLOAK_AUTO_PROVISION: "true"
+  KEYCLOAK_SYNC_ROLE: "false"
+  KEYCLOAK_JWKS_CACHE_SECONDS: "600"
+  #######################  END KEYCLOAK ##########################
 
   OTEL_ENABLED: "true"
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo.mrun-monitoring.svc.cluster.local:4318"

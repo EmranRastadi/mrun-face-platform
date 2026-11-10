@@ -139,6 +139,116 @@ Anti-escalation rules:
 migrated to permission checks. Permission changes take effect immediately for
 the PDP (cache invalidated) but the token keeps its claims until re-login.
 
+### 4.1 Keycloak token exchange
+
+Keycloak is the **edge identity provider**. It authenticates the user, but the
+rest of the platform keeps using the same HS256 token and integer user IDs:
+
+```
+browser ──login──▶ Keycloak ──access token (RS256)──▶ browser
+browser ──POST /auth/keycloak/exchange──▶ api-gateway ──▶ users-service
+                                                           │ verify RS256/JWKS
+                                                           │ map username → local user
+                                                           │ issue HS256 platform token
+browser ◀──────────────────────────────────────────────────┘
+```
+
+`users-service` exposes a public `POST /auth/keycloak/exchange`; the gateway
+proxies the same path. Request and response:
+
+```json
+{ "access_token": "<keycloak access token>" }
+```
+
+```json
+{
+  "access_token": "<platform HS256 token>",
+  "token_type": "Bearer",
+  "expires_in": "7d",
+  "auth_provider": "keycloak",
+  "user": { "id": 7, "username": "mrun", "role": "viewer", "...": "..." }
+}
+```
+
+The endpoint verifies the RS256 signature against the realm JWKS
+(`${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/certs`),
+expiry, `iss` and `azp`. It never needs the Keycloak client secret and never
+forwards the Keycloak token downstream.
+
+| Variable | Meaning |
+|---|---|
+| `KEYCLOAK_ENABLED` | Enable the exchange endpoint; default `false` |
+| `KEYCLOAK_URL` | Base URL of Keycloak, e.g. `http://keycloak.mrun-security.svc.cluster.local:8080` |
+| `KEYCLOAK_REALM` | Realm name, e.g. `mrun` |
+| `KEYCLOAK_CLIENT_ID` | Client whose resource roles are read, e.g. `mrun-backend` |
+| `KEYCLOAK_ISSUERS` | Comma-separated allowed `iss` values (default: derived from URL + realm) |
+| `KEYCLOAK_ALLOWED_CLIENTS` | Comma-separated allowed `azp` values; default `KEYCLOAK_CLIENT_ID` |
+| `KEYCLOAK_AUTO_PROVISION` | Create a local user on first successful exchange; default `false` |
+| `KEYCLOAK_SYNC_ROLE` | Overwrite the local user's role from Keycloak roles on every exchange; default `false` |
+| `KEYCLOAK_JWKS_CACHE_SECONDS` | JWKS cache lifetime; default `600` |
+| `KEYCLOAK_JWKS_URL` | Optional explicit JWKS URL, overriding URL + realm |
+| `KEYCLOAK_PUBLIC_KEY` | Optional offline fallback: realm public key in PEM or base64 DER |
+
+Role mapping (realm roles and roles from `resource_access[clientId]`):
+
+| Keycloak roles | Platform role |
+|---|---|
+| `admin`, `super_admin`, `platform_admin` | `admin` |
+| `operator`, `robot_operator`, `technician`, `supervisor` | `operator` |
+| anything else, including `user` | `viewer` |
+
+With `KEYCLOAK_AUTO_PROVISION=true`, the first exchange creates a local user
+using the Keycloak `preferred_username` (the username is the immutable link),
+email and name. With auto-provisioning off, an administrator must create the
+local user first. The local account's `is_active` flag always wins; disabled
+local users are rejected even if Keycloak still considers them active.
+
+The Keycloak issuer is exact. Keycloak derives `iss` from the URL used to
+request the token, so the value changes when you access Keycloak through a
+different host or port. The in-cluster configmap accepts the canonical
+in-cluster issuer plus the usual local port-forward issuers:
+
+```env
+KEYCLOAK_ISSUERS=http://keycloak.mrun-security.svc.cluster.local:8080/realms/mrun,http://localhost:8070/realms/mrun,http://127.0.0.1:8070/realms/mrun,http://localhost:8080/realms/mrun,http://127.0.0.1:8080/realms/mrun
+```
+
+If your port-forward uses another port, add that exact issuer. A token minted
+at `http://localhost:8070/realms/mrun` is rejected with
+`Keycloak token issuer is not allowed` until that issuer is in the list.
+
+For local development, `mrun-backend` can have **Direct access grants**
+temporarily enabled so you can obtain a token with a password grant:
+
+```bash
+KC_TOKEN=$(curl --noproxy '*' -s \
+  -d 'grant_type=password' \
+  -d 'client_id=mrun-backend' \
+  -d 'client_secret=<mrun-backend-secret>' \
+  -d 'username=mrun' \
+  -d 'password=change-me' \
+  http://localhost:8070/realms/mrun/protocol/openid-connect/token \
+  | jq -r .access_token)
+
+curl --noproxy '*' -s -X POST http://localhost/auth/keycloak/exchange \
+  -H 'content-type: application/json' \
+  -d "{\"access_token\":\"$KC_TOKEN\"}" | jq
+```
+
+The exchange response contains a **platform JWT**. Use that token for the
+other APIs; the Keycloak token itself is only valid at the exchange endpoint:
+
+```bash
+curl --noproxy '*' -s http://localhost/auth/me \
+  -H "Authorization: Bearer <platform-jwt>" | jq
+```
+
+`mrun-backend` is a confidential client. Direct access grants are convenient
+for local testing only and should be disabled afterward; browser clients
+should use a public client with the authorization-code + PKCE flow and send
+the resulting access token to the exchange endpoint. The exchange endpoint
+never needs the client secret and never forwards the Keycloak token
+downstream.
+
 ## 5. Bootstrap
 
 On `onApplicationBootstrap` `IamSeedService`:
