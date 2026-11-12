@@ -254,7 +254,7 @@ and carries `sub`, `username`, `role`, `iss`, `aud`, plus the enterprise claims 
 
 - `POST /auth/login` (public) exchanges username/password for an access token.
 - `POST /auth/keycloak/exchange` (public) verifies a Keycloak RS256 access token and returns the
-  normal platform token. See [`docs/iam.md` §4.1](docs/iam.md#41-keycloak-token-exchange).
+  normal platform token. See [`docs/iam.md` §4.2](docs/iam.md#42-keycloak-token-exchange).
 - `GET /auth/me` returns the authenticated user.
 - `POST /users`, `GET /users`, `DELETE /users/:id`, and `PATCH /users/:id/role` are **admin-only**.
 - `GET/PATCH /users/:id` are **admin or self**; users cannot change their own role.

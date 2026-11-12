@@ -134,7 +134,9 @@ describe('KeycloakService', () => {
     const service = createService();
 
     await expect(
-      service.verifyToken(await sign({ iss: 'http://evil.example/realms/mrun' })),
+      service.verifyToken(
+        await sign({ iss: 'http://evil.example/realms/mrun' }),
+      ),
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 

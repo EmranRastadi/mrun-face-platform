@@ -34,6 +34,9 @@ data:
   # development. Signatures are still verified against the realm JWKS.
   KEYCLOAK_ISSUERS: "http://keycloak.mrun-security.svc.cluster.local:8080/realms/mrun,http://localhost:8070/realms/mrun,http://127.0.0.1:8070/realms/mrun,http://localhost:8080/realms/mrun,http://127.0.0.1:8080/realms/mrun"
   KEYCLOAK_ALLOWED_CLIENTS: "mrun-backend"
+  # Local IAM (roles/permissions/grants) stays the authorization source of
+  # truth. New users start as viewers; only enable sync to mirror Keycloak's
+  # coarse role into users.role.
   KEYCLOAK_AUTO_PROVISION: "true"
   KEYCLOAK_SYNC_ROLE: "false"
   KEYCLOAK_JWKS_CACHE_SECONDS: "600"

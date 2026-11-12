@@ -204,7 +204,9 @@ export class KeycloakService {
     if (kid) {
       throw new UnauthorizedException('Unknown Keycloak signing key');
     }
-    throw new ServiceUnavailableException('Keycloak signing keys are unavailable');
+    throw new ServiceUnavailableException(
+      'Keycloak signing keys are unavailable',
+    );
   }
 
   private selectKeys(keys: Map<string, string>, kid?: string): string[] {

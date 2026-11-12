@@ -139,16 +139,47 @@ Anti-escalation rules:
 migrated to permission checks. Permission changes take effect immediately for
 the PDP (cache invalidated) but the token keeps its claims until re-login.
 
-### 4.1 Keycloak token exchange
+### 4.1 Authorization boundary: Keycloak vs. platform IAM
 
-Keycloak is the **edge identity provider**. It authenticates the user, but the
-rest of the platform keeps using the same HS256 token and integer user IDs:
+Keycloak is the **identity provider** (authentication, MFA, sessions, social
+login, password reset). The platform IAM remains the **authorization engine**:
+`roles`, `permissions`, `role_assignments`, `resource_grants`, organization
+scopes and the `/authz/check` PDP stay in `users-service`. Do not move those
+domain rules into Keycloak.
+
+The recommended split is:
+
+| Concern | Source of truth |
+|---|---|
+| Login, MFA, password policy, sessions | Keycloak |
+| User profile, local account status | `users-service` |
+| Coarse role used by legacy guards (`admin`/`operator`/`viewer`) | `users.role` |
+| Fine-grained permissions, scoped role assignments, resource grants | Platform IAM |
+| Tenant/organization membership and resource scope | Platform IAM |
+
+`KEYCLOAK_SYNC_ROLE` defaults to `false`. Leave it off when platform IAM is
+authoritative: Keycloak roles are then only a bootstrap/identity attribute and
+never overwrite local `role_assignments` or `resource_grants`. If it is
+enabled, only the coarse `users.role` column is synchronized; fine-grained
+permissions and grants are still managed locally.
+
+Do not run two policy decision points for the same request. Using Keycloak
+Authorization Services/UMA *and* the platform `authz` PDP for the same
+permission creates split-brain decisions and makes revocation ambiguous. Use
+Keycloak roles/groups as identity attributes, then resolve authorization in
+the platform PDP.
+
+### 4.2 Keycloak token exchange
+
+Keycloak authenticates the user, but the rest of the platform keeps using the
+same HS256 token and integer user IDs:
 
 ```
 browser ──login──▶ Keycloak ──access token (RS256)──▶ browser
 browser ──POST /auth/keycloak/exchange──▶ api-gateway ──▶ users-service
                                                            │ verify RS256/JWKS
-                                                           │ map username → local user
+                                                           │ resolve by keycloak_sub
+                                                           │ (username only for first link)
                                                            │ issue HS256 platform token
 browser ◀──────────────────────────────────────────────────┘
 ```
@@ -198,10 +229,17 @@ Role mapping (realm roles and roles from `resource_access[clientId]`):
 | anything else, including `user` | `viewer` |
 
 With `KEYCLOAK_AUTO_PROVISION=true`, the first exchange creates a local user
-using the Keycloak `preferred_username` (the username is the immutable link),
-email and name. With auto-provisioning off, an administrator must create the
-local user first. The local account's `is_active` flag always wins; disabled
-local users are rejected even if Keycloak still considers them active.
+using the Keycloak `preferred_username`, email and name, then stores the
+Keycloak `sub` in `users.keycloak_sub`. The `sub` is the stable link; username
+and e-mail are mutable in Keycloak and are only used to find accounts created
+before this column existed. A local account that already has a different
+`keycloak_sub` cannot be taken over by reusing its username.
+
+New auto-provisioned users start as `viewer` unless
+`KEYCLOAK_SYNC_ROLE=true`, in which case the Keycloak role mapping is used as
+the initial coarse role. With auto-provisioning off, an administrator must
+create the local user first. The local account's `is_active` flag always wins;
+disabled local users are rejected even if Keycloak still considers them active.
 
 The Keycloak issuer is exact. Keycloak derives `iss` from the URL used to
 request the token, so the value changes when you access Keycloak through a
@@ -249,6 +287,31 @@ the resulting access token to the exchange endpoint. The exchange endpoint
 never needs the client secret and never forwards the Keycloak token
 downstream.
 
+### 4.3 Production checklist
+
+- Serve Keycloak over HTTPS and set its public hostname (`KC_HOSTNAME`) so the
+  `iss` value is stable. Keep `KEYCLOAK_ISSUERS` to the exact public issuer;
+  do not add wildcard or development issuers in production.
+- Use a public browser client with authorization-code + PKCE. Keep
+  `mrun-backend` confidential, disable direct access grants, and never ship
+  its secret to a browser.
+- Keep `KEYCLOAK_SYNC_ROLE=false` unless Keycloak is explicitly the source of
+  the coarse platform role. Fine-grained permissions, scoped assignments and
+  resource grants always belong to the platform IAM.
+- Do not expose the Keycloak admin console or admin API publicly. Use a
+  separate admin hostname/VPN and MFA for administrators.
+- Keep Keycloak access tokens short-lived (for example five minutes). The
+  browser can obtain a fresh Keycloak token with its refresh token and call
+  the exchange endpoint again; the platform token lifetime is controlled by
+  `JWT_EXPIRES_IN`.
+- Rate-limit `/auth/keycloak/exchange` at the ingress or gateway. It is public
+  by design but should not be an unbounded token-verification oracle.
+- Back up the Keycloak database, export the realm for disaster recovery, and
+  test realm upgrades before rolling Keycloak forward.
+- Monitor JWKS fetch failures, exchange `401/503` rates and Keycloak login
+  failures. A JWKS outage is fail-closed: exchanges fail rather than accepting
+  unverified tokens.
+
 ## 5. Bootstrap
 
 On `onApplicationBootstrap` `IamSeedService`:
@@ -268,6 +331,8 @@ Seeding is idempotent and never deletes tenant data.
 manifests set `DB_SYNCHRONIZE=false`. The IAM schema is owned by
 `src/common/database/migrations/1700000000000-IamSchema.ts` (idempotent, so it
 is safe on databases previously created by `synchronize`).
+`1700000001000-KeycloakIdentity.ts` adds the nullable, uniquely indexed
+`users.keycloak_sub` link and is safe to apply while users are online.
 
 - `DB_MIGRATIONS_RUN=true` runs pending migrations at boot (set in the
   users-service ConfigMap).

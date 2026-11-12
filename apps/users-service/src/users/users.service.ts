@@ -88,6 +88,29 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { username } });
   }
 
+  async findByKeycloakSubject(subject: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { keycloak_sub: subject } });
+  }
+
+  /**
+   * Binds a local account to a Keycloak identity exactly once. Re-linking an
+   * account to a different subject is rejected: the Keycloak `sub` is the
+   * stable identity, while the username is only a bootstrap lookup key.
+   */
+  async linkKeycloakSubject(id: number, subject: string): Promise<User> {
+    const user = await this.findOne(id);
+    if (user.keycloak_sub && user.keycloak_sub !== subject) {
+      throw new ConflictException(
+        'User is already linked to a different Keycloak identity',
+      );
+    }
+    if (!user.keycloak_sub) {
+      user.keycloak_sub = subject;
+      await this.usersRepository.save(user);
+    }
+    return this.findOne(id);
+  }
+
   async findByUsernameWithPassword(username: string): Promise<User | null> {
     return this.usersRepository
       .createQueryBuilder('user')

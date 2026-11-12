@@ -12,9 +12,10 @@ import { User } from '../users/users.entity';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { KeycloakExchangeDto } from './dto/keycloak-exchange.dto';
+import { Role } from '@mrun/contracts';
 import type { JwtClaims } from '@mrun/contracts';
 import { AuthzService } from '../iam/authz/authz.service';
-import { KeycloakService } from './keycloak/keycloak.service';
+import { KeycloakIdentity, KeycloakService } from './keycloak/keycloak.service';
 
 @Injectable()
 export class AuthService {
@@ -52,8 +53,41 @@ export class AuthService {
    */
   async exchangeKeycloakToken(dto: KeycloakExchangeDto) {
     const identity = await this.keycloak.verifyToken(dto.access_token);
+    let user = await this.resolveKeycloakUser(identity);
 
-    let user = await this.usersService.findByUsername(identity.username);
+    if (!user.is_active) {
+      throw new UnauthorizedException('User account is disabled');
+    }
+
+    if (this.keycloak.syncRole && user.role !== identity.role) {
+      user = await this.usersService.updateRole(user.id, identity.role);
+    }
+
+    return {
+      ...(await this.issuePlatformToken(user)),
+      auth_provider: 'keycloak',
+    };
+  }
+
+  /**
+   * Resolution order:
+   * 1. stable Keycloak `sub` (the normal path after the first exchange),
+   * 2. username for accounts created before Keycloak linking existed,
+   * 3. optional just-in-time provisioning.
+   *
+   * A username is only a migration/bootstrap key. Once a local account has a
+   * `keycloak_sub`, a different subject can never take it over by reusing the
+   * same username or e-mail address.
+   */
+  private async resolveKeycloakUser(identity: KeycloakIdentity): Promise<User> {
+    let user = await this.usersService.findByKeycloakSubject(identity.subject);
+
+    if (!user) {
+      user = await this.usersService.findByUsername(identity.username);
+      if (user) {
+        user = await this.linkKeycloakUser(user, identity.subject);
+      }
+    }
 
     if (!user) {
       if (!this.keycloak.autoProvision) {
@@ -71,36 +105,54 @@ export class AuthService {
         full_name: identity.fullName,
       };
 
+      // Least privilege: local IAM is authoritative for authorization. Only
+      // seed the coarse role from Keycloak when role synchronization is
+      // explicitly enabled; otherwise new users start as viewers.
+      const initialRole = this.keycloak.syncRole ? identity.role : Role.VIEWER;
+
       try {
-        user = await this.usersService.create(createUser, identity.role);
+        user = await this.usersService.create(createUser, initialRole);
       } catch (error) {
         if (!(error instanceof ConflictException)) {
           throw error;
         }
 
-        // A concurrent exchange may have provisioned the same username
-        // between our lookup and insert. Re-read before failing the request.
-        user = await this.usersService.findByUsername(identity.username);
+        // A concurrent exchange may have provisioned the same account
+        // between our lookup and insert. Re-read by both stable and bootstrap
+        // keys before failing the request.
+        user =
+          (await this.usersService.findByKeycloakSubject(identity.subject)) ??
+          (await this.usersService.findByUsername(identity.username));
         if (!user) {
           throw new UnauthorizedException(
             `Keycloak user "${identity.username}" conflicts with an existing account`,
           );
         }
       }
+
+      user = await this.linkKeycloakUser(user, identity.subject);
     }
 
-    if (!user.is_active) {
-      throw new UnauthorizedException('User account is disabled');
+    return user;
+  }
+
+  private async linkKeycloakUser(user: User, subject: string): Promise<User> {
+    if (user.keycloak_sub === subject) return user;
+    if (user.keycloak_sub) {
+      throw new UnauthorizedException(
+        'This account is linked to a different Keycloak identity',
+      );
     }
 
-    if (this.keycloak.syncRole && user.role !== identity.role) {
-      user = await this.usersService.updateRole(user.id, identity.role);
+    try {
+      return await this.usersService.linkKeycloakSubject(user.id, subject);
+    } catch (error) {
+      // Another request may have won the one-time link race. If it linked the
+      // same subject we can continue; otherwise the conflict is real.
+      const linked = await this.usersService.findByKeycloakSubject(subject);
+      if (linked) return linked;
+      throw error;
     }
-
-    return {
-      ...(await this.issuePlatformToken(user)),
-      auth_provider: 'keycloak',
-    };
   }
 
   private async issuePlatformToken(user: User) {
