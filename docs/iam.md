@@ -203,8 +203,10 @@ proxies the same path. Request and response:
 
 The endpoint verifies the RS256 signature against the realm JWKS
 (`${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/certs`),
-expiry, `iss` and `azp`. It never needs the Keycloak client secret and never
-forwards the Keycloak token downstream.
+expiry, `iss`, `azp` and the `typ=Bearer` access-token marker. ID tokens
+(`typ=ID`) are rejected even though Keycloak signs them with the same realm
+key. The endpoint never needs the Keycloak client secret and never forwards
+the Keycloak token downstream.
 
 | Variable | Meaning |
 |---|---|

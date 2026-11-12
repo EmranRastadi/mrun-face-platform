@@ -29,6 +29,7 @@ const signer = new JwtService({});
 function sign(overrides: Record<string, unknown> = {}): Promise<string> {
   return signer.signAsync(
     {
+      typ: 'Bearer',
       sub: '30d36691-72a0-49de-81a6-7591ba5f8b4d',
       preferred_username: 'mrun',
       email: 'mrun@gmail.com',
@@ -158,6 +159,18 @@ describe('KeycloakService', () => {
     await expect(service.verifyToken(hsToken)).rejects.toBeInstanceOf(
       UnauthorizedException,
     );
+  });
+
+  it('rejects ID tokens and tokens without an access-token type', async () => {
+    const service = createService();
+
+    await expect(
+      service.verifyToken(await sign({ typ: 'ID' })),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+
+    await expect(
+      service.verifyToken(await sign({ typ: undefined })),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
   it('falls back to a configured static public key when JWKS fails', async () => {

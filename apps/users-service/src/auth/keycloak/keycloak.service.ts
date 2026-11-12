@@ -22,6 +22,7 @@ const OPERATOR_ROLES = new Set([
 ]);
 
 interface KeycloakTokenClaims {
+  typ?: unknown;
   sub?: unknown;
   preferred_username?: unknown;
   username?: unknown;
@@ -135,6 +136,15 @@ export class KeycloakService {
         }`,
       );
       throw new UnauthorizedException('Invalid or expired Keycloak token');
+    }
+
+    // Keycloak signs both access tokens (typ=Bearer) and ID tokens (typ=ID)
+    // with the realm key. Only access tokens may be exchanged for a platform
+    // token; accepting ID tokens would bypass the intended token audience.
+    if (this.stringClaim(claims.typ) !== 'Bearer') {
+      throw new UnauthorizedException(
+        'Keycloak token is not an access token',
+      );
     }
 
     this.assertIssuer(claims.iss);
