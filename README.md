@@ -169,7 +169,7 @@ sequenceDiagram
 │   ├── vm/                   # compose init scripts (Postgres/ClickHouse SQL)
 │   └── kustomization.yaml    # root: bootstrap → platform → apps
 ├── docs/                     # architecture, DDD boundaries, API contracts, Kafka topics, webrtc
-├── scripts/                  # up.sh, kind-up.sh, docker-clean.sh
+├── scripts/                  # up.sh, kind-up.sh, docker-clean.sh, docker-image-gc.sh, cleanup.sh, install-cleanup-agent.sh
 ├── docker-compose.yml        # local infrastructure (and optional app containers)
 ├── skaffold.yaml             # build + deploy to Kubernetes
 ├── kind-config.yaml          # local kind cluster (host :80/:443 → node 30080/30443)
@@ -399,7 +399,7 @@ flowchart TB
 | **Prometheus** | `quay.io/prometheus/prometheus:v3.15.1` (kube-prometheus-stack) | `mrun-monitoring` | Metrics store (7-day retention, operator-managed)  |
 | **kube-state-metrics** | `bitnamilegacy/kube-state-metrics:2.14.0`    | `mrun-monitoring` | Kubernetes object/pod/deployment metrics                 |
 | **node-exporter** | `prom/node-exporter:v1.8.2`                      | `mrun-monitoring` | Node CPU, memory, filesystem, network metrics            |
-| **Loki**      | `grafana/loki:3.6.16`                                | `mrun-monitoring` | Log store (7-day retention, filesystem)                  |
+| **Loki**      | `grafana/loki:3.6.16`                                | `mrun-monitoring` | Log store (15-minute retention, filesystem)              |
 | **Tempo**     | `grafana/tempo:2.9.0`                                | `mrun-monitoring` | Trace store (OTLP gRPC/HTTP, local blocks)               |
 | **Fluent Bit**| `cr.fluentbit.io/fluent/fluent-bit:5.1.3`            | `mrun-monitoring` | Tails pod logs on every node and ships them to Loki      |
 | **Reflector** | `emberstack/kubernetes-reflector:10.0.65`            | `mrun-system`     | Syncs Secrets/ConfigMaps between namespaces              |
@@ -412,6 +412,9 @@ flowchart TB
 > (`http_requests_total`, `http_request_duration_seconds`, `app_info`, default process
 > metrics) on its `http` container port. Logs are JSON on stdout, shipped by Fluent Bit to
 > Loki; traces are exported over OTLP/HTTP to Tempo (`OTEL_EXPORTER_OTLP_ENDPOINT`).
+> Loki keeps only the last **15 minutes** of logs (`retention_period: 15m`, compactor every
+> 5 minutes) so the 10Gi volume cannot fill, and its ingestion limits are raised
+> (64 MB/s global, 64 MB/s per stream) to absorb Fluent Bit's reflector bursts.
 > Open Grafana with `kubectl -n mrun-monitoring port-forward svc/grafana 3000:3000`
 > (credentials in `grafana-secret`).
 
@@ -613,23 +616,41 @@ kubectl get pods -n mrun-apps -n mrun-system -n mrun-security -n mrun-monitoring
 
 `skaffold.yaml` sets `build.tagPolicy.inputDigest`, so an image is tagged with a hash of its
 source + Dockerfile. Services that did not change keep their tag and Skaffold reuses the existing
-image instead of rebuilding all 11 on every run. Only changed services get a new image.
+image instead of rebuilding all 12 on every run. Only changed services get a new image.
 
 `skaffold dev` is different: it watches the tree and rebuilds + redeploys every service whose files
 changed on each save, and it leaves every built image behind. Stop it (`Ctrl+C`) when you are done
 rather than leaving it running in a background terminal.
 
-To reclaim disk space after experimenting:
+With `push: false` on kind, Skaffold gives each built image two tags: the input digest (its build
+cache key) and the image ID (the immutable reference used by the pods). `scripts/docker-image-gc.sh`
+therefore retains **image IDs**, not tags: it keeps the newest `MRUN_IMAGE_RETAIN` image per `mrun/*`
+repository (default `1`) with **all** of its tags, plus every image referenced by a running pod. Older
+image IDs and their tags are removed. This is what stops disk usage from growing across deploys
+without forcing a rebuild of unchanged services.
+
+Cleanup runs automatically in three places:
 
 ```bash
-./scripts/docker-clean.sh
+# after every deploy (deploy.kubectl.hooks.after in skaffold.yaml)
+skaffold run
+
+# every 15 minutes on macOS (LaunchAgent -> scripts/cleanup.sh)
+./scripts/install-cleanup-agent.sh
+
+# manually, at any time
+./scripts/docker-clean.sh            # GC + build cache + dangling images
+./scripts/docker-clean.sh --dry-run  # show what would be removed
 ```
 
-It removes stopped containers, dangling images, human-tagged `mrun/*` images (git SHA, `-dirty`)
-that no pod is using, and build cache older than 7 days. Digest-tagged images — the ones Skaffold
-reuses — are kept, so the next `skaffold run` still starts from cache. `./scripts/docker-clean.sh
---deep` also removes unused digest images; it frees more space but makes the next run rebuild all
-services.
+`scripts/cleanup.sh` also runs `docker builder prune -f`, so unused build cache is removed every
+15 minutes as well. It never touches running containers, volumes, or application data. Remove the
+LaunchAgent with `./scripts/install-cleanup-agent.sh --uninstall`.
+
+Loki is separate: its stored logs are deleted by Loki itself after **15 minutes**
+(`limits_config.retention_period: 15m` + compactor every 5 minutes in
+`infrastructure/platform/monitoring/loki/configmap.yaml`). Only log chunks are expired; the
+filesystem volume is not wiped and no other data is touched.
 
 > The kind cluster is created from `kind-config.yaml` via `./scripts/kind-up.sh` (name
 > `mrun-face-platform`, so the context is `kind-mrun-face-platform`). The script pre-creates the

@@ -91,7 +91,21 @@ manifests:
       - infrastructure/platform/identity
 
 deploy:
-  kubectl: {}
+  kubectl:
+    hooks:
+      # Clear finalizers on namespaces/PVCs that are already terminating so a
+      # previous failed teardown cannot block this deploy's WaitForDeletions.
+      before:
+        - host:
+            command: ["./scripts/k8s-unstick.sh"]
+            os: [darwin, linux]
+      # Keep local disk bounded: drop old mrun/* image IDs (and their tags)
+      # after the new version is live. The newest image per repo and every
+      # image used by a pod are always kept.
+      after:
+        - host:
+            command: ["./scripts/docker-image-gc.sh"]
+            os: [darwin, linux]
 
 profiles:
   - name: prod

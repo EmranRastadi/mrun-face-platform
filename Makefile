@@ -1,4 +1,4 @@
-.PHONY: install dev build test lint format proto clean up down deploy monitoring monitoring-uninstall webrtc-up webrtc-down webrtc-logs webrtc-status webrtc-stun-check
+.PHONY: install dev build test lint format proto clean up down deploy monitoring monitoring-uninstall webrtc-up webrtc-down webrtc-logs webrtc-status webrtc-stun-check gc cleanup-agent cleanup-agent-uninstall
 
 install:
 	pnpm install
@@ -35,6 +35,17 @@ monitoring:
 
 monitoring-uninstall:
 	helm uninstall kube-prometheus-stack -n mrun-monitoring || true
+
+# Keep Docker disk usage flat: newest image per repo + live pod images.
+gc:
+	./scripts/docker-image-gc.sh
+
+# macOS LaunchAgent: runs the same GC + build-cache prune every 15 minutes.
+cleanup-agent:
+	./scripts/install-cleanup-agent.sh
+
+cleanup-agent-uninstall:
+	./scripts/install-cleanup-agent.sh --uninstall
 
 up-vector:
 	docker compose --profile vector up -d
