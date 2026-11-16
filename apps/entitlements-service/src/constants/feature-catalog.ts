@@ -31,6 +31,12 @@ export const FEATURE_CATALOG = [
   f('cameras.ai_detection', 'AI detection', FeatureValueType.BOOLEAN, 'vision', null, 'Object and anomaly detection on camera streams'),
   f('analytics.export', 'Analytics export', FeatureValueType.BOOLEAN, 'data', null, 'Export analytics and audit data'),
   f('api.requests_per_month', 'API requests', FeatureValueType.QUANTITY, 'platform', 'requests', 'Monthly API request quota'),
+  f('vision.detection', 'Vision detection', FeatureValueType.BOOLEAN, 'vision', null, 'Run object and anomaly detection on camera streams'),
+  f('vision.face_recognition', 'Face recognition', FeatureValueType.BOOLEAN, 'vision', null, 'Identify enrolled persons on camera streams'),
+  f('vision.card_detection', 'Card detection', FeatureValueType.BOOLEAN, 'vision', null, 'Detect and read cards on camera streams'),
+  f('vision.zone_analytics', 'Zone analytics', FeatureValueType.BOOLEAN, 'vision', null, 'Zone occupancy and crossing analytics'),
+  f('vision.retention_days', 'Video retention', FeatureValueType.QUANTITY, 'vision', 'days', 'Days of recorded video retained'),
+  f('models.training', 'Model training', FeatureValueType.BOOLEAN, 'ml', null, 'Launch and manage ML training jobs'),
 ];
 
 export const FEATURE_KEYS = new Set(FEATURE_CATALOG.map((x) => x.key));

@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package mrun.vision.v1;
+
+service VisionService {
+  rpc Detect(DetectRequest) returns (DetectResponse);
+}
+
+message DetectRequest {
+  bytes jpeg = 1;
+  int32 width = 2;
+  int32 height = 3;
+  string camera_id = 4;
+}
+
+message BBox {
+  float x = 1;
+  float y = 2;
+  float width = 3;
+  float height = 4;
+}
+
+message Detection {
+  string id = 1;
+  string type = 2;
+  BBox bbox = 3;
+  float score = 4;
+  repeated string zone_ids = 5;
+  map<string, string> attributes = 6;
+}
+
+message DetectResponse {
+  repeated Detection detections = 1;
+  map<string, string> model_versions = 2;
+  int64 took_ms = 3;
+}
+", "path":"/home/emran/projects/mrun-face-platform/packages/proto/vision.proto"}

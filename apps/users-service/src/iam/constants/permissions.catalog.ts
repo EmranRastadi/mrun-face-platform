@@ -73,6 +73,18 @@ export const PERMISSION_CATALOG: PermissionDefinition[] = [
   p('robots:control', 'robots', 'control', 'Send control commands to robots', TENANT),
   p('cameras:read', 'cameras', 'read', 'View cameras and streams', TENANT),
   p('cameras:manage', 'cameras', 'manage', 'Configure cameras and streams', TENANT),
+  p('cameras:ingest', 'cameras', 'ingest', 'Ingest frames from cameras', TENANT),
+
+  // Detection / recognition
+  p('detections:read', 'detections', 'read', 'View detection results', TENANT),
+  p('detections:manage', 'detections', 'manage', 'Manage detection pipelines', PLATFORM),
+  p('recognitions:read', 'recognitions', 'read', 'View recognition results', TENANT),
+  p('zones:read', 'zones', 'read', 'View zones and polygons', TENANT),
+  p('zones:manage', 'zones', 'manage', 'Manage zones and polygons', TENANT),
+  p('models:read', 'models', 'read', 'View ML model versions', TENANT),
+  p('models:manage', 'models', 'manage', 'Manage ML model versions', PLATFORM),
+  p('training:read', 'training', 'read', 'View training jobs', TENANT),
+  p('training:manage', 'training', 'manage', 'Launch and manage training jobs', PLATFORM),
 
   // Support and service
   p('support.tickets:read', 'support.tickets', 'read', 'View support tickets', TENANT),

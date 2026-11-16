@@ -8,3 +8,6 @@ export * from '../audit.events';
 export * from '../card.events';
 export * from '../recognition.events';
 export * from '../vision.events';
+export * from '../camera/index';
+export * from '../zone.events';
+export * from '../model.events';

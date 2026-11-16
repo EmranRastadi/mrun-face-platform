@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package mrun.recognition.v1;
+
+service RecognitionService {
+  rpc Recognize(RecognizeRequest) returns (RecognizeResponse);
+}
+
+message RecognizeRequest {
+  repeated float embedding = 1;
+  int32 top_k = 2;
+  string organization_id = 3;
+  string camera_id = 4;
+  repeated string zone_ids = 5;
+  float threshold = 6;
+}
+
+message RecognizeMatch {
+  string person_id = 1;
+  float score = 2;
+  string decision = 3;
+  string card_id = 4;
+  repeated string zone_ids = 5;
+}
+
+message RecognizeResponse {
+  repeated RecognizeMatch matches = 1;
+  int32 unknown_count = 2;
+  int64 took_ms = 3;
+  map<string, string> model_versions = 4;
+}
+", "path":"/home/emran/projects/mrun-face-platform/packages/proto/recognition.proto"}

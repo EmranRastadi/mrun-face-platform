@@ -7,3 +7,7 @@ export * from './organizations';
 export * from './rbac';
 export * from './authz';
 export * from './entitlements';
+export * from './vision';
+export * from './detection';
+export * from './recognition';
+export * from './models';
